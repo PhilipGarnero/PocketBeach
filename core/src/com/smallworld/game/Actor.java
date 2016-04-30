@@ -1,5 +1,6 @@
 package com.smallworld.game;
 
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
@@ -8,13 +9,19 @@ import com.badlogic.gdx.physics.box2d.CircleShape;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.joints.MouseJoint;
 import com.smallworld.game.phenotypes.Brain;
+import com.smallworld.game.phenotypes.Features;
+import com.smallworld.game.phenotypes.Vitals;
+
+import java.util.ArrayList;
+import java.util.Iterator;
 
 public class Actor {
-    public GameWorld world;
     public int id;
+    public GameWorld world;
     public Genotype genotype;
     public Body body;
-    boolean alive;
+    public Vitals vitals;
+    public Features features;
     private Brain brain;
     private Experiment.FitnessEvaluation fitnessEvaluation;
     private ShapeRenderer shapeRenderer = new ShapeRenderer();
@@ -24,7 +31,6 @@ public class Actor {
         this.world = world;
         this.id = id;
         this.fitnessEvaluation = fitnessEvaluation;
-        this.alive = true;
         if (genotype == null)
             this.genotype = new Genotype(null);
         else
@@ -42,39 +48,13 @@ public class Actor {
         this.body.setUserData(this);
     }
 
-    public void dispose() {
-        if (this.mouseJoint != null) {
-            this.world.physics.destroyJoint(this.mouseJoint);
-            this.world.screen.inputs.mouseJoint = null;
-        }
-        this.world.physics.destroyBody(this.body);
-        this.shapeRenderer.dispose();
-
-    }
-
-    public float getFitness() {
-        return this.fitnessEvaluation.evaluate(this);
-    }
-
-    public boolean isDead() {
-        return !this.alive;
-    }
-
-    public void render() {
-        this.shapeRenderer.setProjectionMatrix(this.world.screen.camera.combined);
-        this.shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
-        if (this.isDead())
-            this.shapeRenderer.setColor(1, 0, 0, 1);
-        else
-            this.shapeRenderer.setColor(1, 1, 0, 1);
-        this.shapeRenderer.circle(this.body.getPosition().x, this.body.getPosition().y, 1);
-        this.shapeRenderer.end();
-    }
-
     public void buildPhenotype() {
-        this.brain = (Brain)this.genotype.getPhenotype("brain");
+        this.vitals = (Vitals)this.genotype.getPhenotype("vitals", this);
+        this.brain = (Brain)this.genotype.getPhenotype("brain", this);
+        this.features = (Features)this.genotype.getPhenotype("features", this);
+
         if (!this.brain.isViable())
-            this.alive = false;
+            this.vitals.alive = false;
 
         CircleShape circle = new CircleShape();
         circle.setRadius(1f);
@@ -83,19 +63,45 @@ public class Actor {
         fixtureDef.density = 0.5f;
         fixtureDef.friction = 0.4f;
         fixtureDef.restitution = 0.5f;
-        fixtureDef.filter.groupIndex = -1;
+        //fixtureDef.filter.groupIndex = -1;
+        //fixtureDef.isSensor = true;
         this.body.createFixture(fixtureDef);
         circle.dispose();
-        //this.properties = this.genotype.getPhenotype("properties");
-        //this.body.createFixture(this.genotype.getPhenotype("body").fixture);
     }
 
-    public Vector2 directionToWorldPoint() {
-        return this.world.point.cpy().sub(this.body.getPosition()).nor();
+    public void dispose() {
+        if (this.mouseJoint != null) {
+            this.world.physics.destroyJoint(this.mouseJoint);
+            this.world.screen.inputs.mouseJoint = null;
+        }
+        this.world.physics.destroyBody(this.body);
+        this.shapeRenderer.dispose();
     }
 
-    public float distanceToWorldPoint() {
-        return this.world.point.cpy().sub(this.body.getPosition()).len() / (float)Math.sqrt(Math.pow(this.world.width, 2) + Math.pow(this.world.height, 2));
+    public void render() {
+        this.shapeRenderer.setProjectionMatrix(this.world.screen.camera.combined);
+        this.shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
+        this.shapeRenderer.setColor(new Color());
+        this.shapeRenderer.setColor(this.getHealthColor());
+        this.shapeRenderer.circle(this.body.getPosition().x, this.body.getPosition().y, 1);
+        this.shapeRenderer.end();
+    }
+
+    private Color getHealthColor() {
+        float health = this.vitals.getEnergyPercentage();
+        float r = 1 - health + 1f/(float)Math.exp(Math.pow((health - 0.5f), 2) / 0.1);
+        float g = 1 - r;
+        float b = 0f;
+        float a = 1f;
+        return new Color(r, g, b, a);
+    }
+
+    public float getFitness() {
+        return this.fitnessEvaluation.evaluate(this);
+    }
+
+    public boolean isDead() {
+        return !this.vitals.alive;
     }
 
     public boolean inWater() {
@@ -103,25 +109,24 @@ public class Actor {
     }
 
     public void update() {
+        this.vitals.update(this.inWater());
         if (!this.isDead())
-            this.act();
+            this.applyValuesToActuators(this.brain.think(this.getSensorsValues()));
         this.render();
     }
 
-    public void act() {
-        Vector2 dir = this.directionToWorldPoint();
-        float dis = this.distanceToWorldPoint();
-        float water = this.inWater() ? 1 : 0;
-        float[] inputs = {dir.x, dir.y, dis, water};
-        float[] outputs = this.brain.think(inputs, 2);
-        this.move(dir.set(outputs[0], outputs[1]));
+    private ArrayList<Float> getSensorsValues() {
+        ArrayList<Float> values = new ArrayList<Float>();
+        for (final Features.Sensor sensor : this.features.sensors)
+            values.add(sensor.getValue());
+        return values;
     }
 
-    public void move(Vector2 dir) {
-        if (this.inWater())
-            this.body.applyForceToCenter(dir.x, dir.y, true);
-        else {
-            this.body.setLinearVelocity(dir);
+    private void applyValuesToActuators(ArrayList<Float> outputs) {
+        Iterator<Float> outIt = outputs.iterator();
+        Iterator<Features.Actuator> actuatorIt = this.features.actuators.iterator();
+        while (outIt.hasNext() && actuatorIt.hasNext()) {
+            actuatorIt.next().act(outIt);
         }
     }
 }

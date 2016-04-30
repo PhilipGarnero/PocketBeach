@@ -3,16 +3,21 @@ package com.smallworld.game;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Iterator;
 
 public class Population {
     public ArrayList<Actor> actors = new ArrayList<Actor>();
     private boolean sorted = false;
     private float rankProbability;
     private boolean reverseSort;
+    private int maxPop;
+    private Experiment experiment;
 
-    public Population(float rankProbability, boolean reverseSort) {
-        this.rankProbability = rankProbability;
-        this.reverseSort = reverseSort;
+    public Population(Experiment exp) {
+        this.experiment = exp;
+        this.maxPop = exp.MAX_POP_SIZE;
+        this.rankProbability = exp.RANK_PROBABILITY_CONSTANT;
+        this.reverseSort = exp.REVERSE_RANK;
     }
 
     public int size() {
@@ -22,6 +27,22 @@ public class Population {
     public void append(Actor actor) {
         this.actors.add(actor);
         this.sorted = false;
+    }
+
+    public void removeDeads() {
+        Iterator<Actor> iterator = this.actors.iterator();
+        while (iterator.hasNext()) {
+            Actor currentActor = iterator.next();
+            if (currentActor.isDead()) {
+                currentActor.dispose();
+                iterator.remove();
+            }
+        }
+    }
+
+    public void fillPop() {
+        for (int i = this.size(); i < this.maxPop; i++)
+            this.append(this.experiment.createActor(null));
     }
 
     public Actor selectBestFitness() {

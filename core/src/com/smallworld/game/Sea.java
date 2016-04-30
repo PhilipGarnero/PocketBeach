@@ -37,8 +37,8 @@ public class Sea {
 
 	public void render() {
 		this.mesh.setVertices(new float[]{this.world.width, 0, 1, 1,
-				this.world.tide, 0, 0, 1,
-				this.world.tide, this.world.height, 0, 0,
+				this.world.tide - 1, 0, 0, 1,
+				this.world.tide - 1, this.world.height, 0, 0,
 				this.world.width, this.world.height, 1, 0});
 
 		Gdx.gl20.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);

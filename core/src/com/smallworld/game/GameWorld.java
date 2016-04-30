@@ -8,13 +8,19 @@ import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
 import com.badlogic.gdx.physics.box2d.ChainShape;
+import com.badlogic.gdx.physics.box2d.Contact;
+import com.badlogic.gdx.physics.box2d.ContactImpulse;
+import com.badlogic.gdx.physics.box2d.ContactListener;
+import com.badlogic.gdx.physics.box2d.Fixture;
+import com.badlogic.gdx.physics.box2d.Manifold;
 import com.badlogic.gdx.physics.box2d.World;
+import com.smallworld.game.phenotypes.Features;
 import com.smallworld.game.screens.GameScreen;
 
 import java.util.HashMap;
 
 
-public class GameWorld {
+public class GameWorld implements ContactListener {
     public World physics;
     public final float width;
     public float tide;
@@ -36,7 +42,7 @@ public class GameWorld {
         this.createWorldBoundaries();
         this.experiment = new Experiment(this);
         this.experiment.start();
-        this.point = new Vector2(w/2f, h/2f);
+        this.point = new Vector2(w / 2f, h / 2f);
         this.screen = screen;
         this.sea = new Sea(this);
     }
@@ -47,7 +53,7 @@ public class GameWorld {
         Body groundBody = this.physics.createBody(groundBodyDef);
         ChainShape shape = new ChainShape();
         Vector2[] boundaries = {new Vector2(0, 0), new Vector2(width, 0), new Vector2(width, height),
-                                new Vector2(0, height), new Vector2(0, 0)};
+                new Vector2(0, height), new Vector2(0, 0)};
         shape.createChain(boundaries);
         groundBody.createFixture(shape, 0.0f);
         shape.dispose();
@@ -93,5 +99,36 @@ public class GameWorld {
             if (this.experiment.TIME_BETWEEN_GEN != 0 && currentTime - this.experiment.nextGen > this.experiment.TIME_BETWEEN_GEN)
                 this.experiment.nextGeneration();
         }
+    }
+
+    @Override
+    public void beginContact (Contact contact) {
+        this.updateActorSensor(contact, 1);
+    }
+
+    private void updateActorSensor(Contact contact, float sensorValue) {
+        Fixture fixtureA = contact.getFixtureA();
+        Fixture fixtureB = contact.getFixtureB();
+
+        // make sure only one of the fixtures is a sensor
+        if (fixtureA.isSensor() ^ fixtureB.isSensor()) {
+            if (fixtureA.isSensor())
+                ((Features.Sensor)fixtureA.getUserData()).setValue(sensorValue);
+            else
+                ((Features.Sensor)fixtureA.getUserData()).setValue(sensorValue);
+        }
+    }
+
+    @Override
+    public void endContact(Contact contact) {
+        this.updateActorSensor(contact, 0);
+    }
+
+    @Override
+    public void preSolve(Contact contact, Manifold manifold) {
+    }
+
+    @Override
+    public void postSolve(Contact contact, ContactImpulse impulse) {
     }
 }

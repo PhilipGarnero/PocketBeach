@@ -9,7 +9,8 @@ public class Experiment {
     public final int MAX_POP_SIZE = 100;
     public final int RANDOM_ACTORS_NUMBER = 10;
     public final float RANK_PROBABILITY_CONSTANT = 0.2f;
-    public final int TIME_BETWEEN_GEN = 20;
+    public final boolean REVERSE_RANK = false;
+    public final int TIME_BETWEEN_GEN = 15;
     public int popIndex;
     public int currentGen;
     private GameWorld world;
@@ -18,15 +19,13 @@ public class Experiment {
 
     public Experiment(GameWorld world) {
         this.world = world;
-        this.population = new Population(this.RANK_PROBABILITY_CONSTANT, false);
+        this.population = new Population(this);
     }
 
     public void start() {
         this.popIndex = 1;
         this.currentGen = 1;
-        for (int i = 0; i < this.MAX_POP_SIZE; i++) {
-            this.population.append(this.createActor(null));
-        }
+        this.population.fillPop();
     }
 
     public void stop() {
@@ -38,13 +37,13 @@ public class Experiment {
     }
 
     public Actor createActor(Genotype genotype) {
-        Vector2 pos = new Vector2(Rand.rChoice(Arrays.asList(1, (int)this.world.width - 1)),
-                                  Rand.rChoice(Arrays.asList(1, (int)this.world.height - 1)));
+        Vector2 pos = new Vector2(Rand.rInt(1, (int)this.world.width - 1),
+                                  Rand.rInt(1, (int)this.world.height - 1));
         Actor actor = new Actor(this.world, this.popIndex, new FitnessEvaluation() {
             public float evaluate(Actor actor) {
                 if (actor.isDead())
-                    return 0xFFFFFFF;
-                return(actor.body.getPosition().sub(actor.world.point).len());
+                    return 0xFFFF;
+                return Math.abs(actor.body.getPosition().x - actor.world.tide);
             }
         }, genotype, pos);
         this.popIndex += 1;
@@ -54,11 +53,16 @@ public class Experiment {
     public void update() {
         for (Actor actor : this.population.actors)
             actor.update();
+        if (this.TIME_BETWEEN_GEN == 0) {
+            this.population.removeDeads();
+            if (this.population.size() == 0)
+                this.population.fillPop();
+        }
     }
 
     public void nextGeneration() {
         this.nextGen = System.nanoTime() / 1000000000;
-        Population newPop = new Population(this.RANK_PROBABILITY_CONSTANT, false);
+        Population newPop = new Population(this);
         for (int i = 0; i < this.RANDOM_ACTORS_NUMBER; i++) {
             newPop.append(this.createActor(null));
         }

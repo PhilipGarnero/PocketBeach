@@ -1,13 +1,14 @@
 package com.smallworld.game;
 
-import com.badlogic.gdx.Gdx;
 import com.smallworld.game.phenotypes.Brain;
+import com.smallworld.game.phenotypes.Features;
 import com.smallworld.game.phenotypes.PhysicalBody;
+import com.smallworld.game.phenotypes.Vitals;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Random;
+
 
 public class Genotype {
     private final static float GENE_MUTATION_PROB = 0.70f;
@@ -31,7 +32,7 @@ public class Genotype {
     public Genotype(String dna) {
         this.GENE_PHENOTYPES_IDS.put("body", "01");
         this.GENE_PHENOTYPES_IDS.put("brain", "02");
-        this.GENE_PHENOTYPES_IDS.put("properties", "03");
+        this.GENE_PHENOTYPES_IDS.put("vitals", "03");
 
         this.dna = dna;
         if (this.dna == null)
@@ -110,11 +111,15 @@ public class Genotype {
         return pGenes;
     }
 
-    public Object getPhenotype(String name) {
+    public Object getPhenotype(String name, Actor actor) {
         if (name.equals("brain")) {
-            return new Brain(this.getGenesForPhenotype("brain"));
+            return new Brain(this.getGenesForPhenotype("brain"), actor);
         } else if (name.equals("body")) {
-            return new PhysicalBody(this.getGenesForPhenotype("body"));
+            return new PhysicalBody(this.getGenesForPhenotype("body"), actor);
+        } else if (name.equals("vitals")) {
+            return new Vitals(this.getGenesForPhenotype("vitals"), actor);
+        } else if (name.equals("features")) {
+            return new Features(this.getGenesForPhenotype("features"), actor);
         }
         return null;
     }

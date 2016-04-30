@@ -1,9 +1,11 @@
 package com.smallworld.game.phenotypes;
 
+import com.smallworld.game.Actor;
 import com.smallworld.game.Genotype;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 
 public class Brain {
     private static int NEURON_ID_CODE_LENGTH = 1;
@@ -17,10 +19,11 @@ public class Brain {
     private ArrayList<OutputNeuron> outputs = new ArrayList<OutputNeuron>();
     private ArrayList<Synapse> connections = new ArrayList<Synapse>();
     private HashMap<Integer, ArrayList<ConnectionBuilder>> tree = new HashMap<Integer, ArrayList<ConnectionBuilder>>();
+    private Actor actor;
 
-
-    public Brain(ArrayList<String> genes) {
+    public Brain(ArrayList<String> genes, Actor actor) {
         this.genes = genes;
+        this.actor = actor;
         this.geneParser();
     }
 
@@ -138,21 +141,17 @@ public class Brain {
         return null;
     }
 
-    public float[] think(float[] inputs, int outputDimension) {
-        float[] results = new float[outputDimension];
+    public ArrayList<Float> think(ArrayList<Float> in) {
+        ArrayList<Float> out = new ArrayList<Float>();
 
-        for (int i = 0; i < Math.min(inputs.length, this.inputs.size()); i++)
-            this.inputs.get(i).activate(inputs[i]);
-        for (int i = 0; i < Math.min(outputDimension, this.outputs.size()); i++) {
-            results[i] = this.outputs.get(i).getValue();
-            this.outputs.get(i).reset();
-        }
-        if (outputDimension > this.outputs.size()) {
-            for (int i = this.outputs.size(); i < outputDimension; i++)
-                results[i] = 0.0f;
-        } else if (outputDimension < this.outputs.size()) {
-            for (int i = outputDimension; i < this.outputs.size(); i++)
-                this.outputs.get(i).reset();
+        Iterator<Float> inIt = in.iterator();
+        Iterator<InputNeuron> neuronIt = this.inputs.iterator();
+        while (neuronIt.hasNext() && inIt.hasNext())
+            neuronIt.next().activate(inIt.next());
+
+        for (OutputNeuron neuron : this.outputs) {
+            out.add(neuron.getValue());
+            neuron.reset();
         }
         for (InputNeuron neuron : this.inputs)
             neuron.reset();
@@ -162,7 +161,7 @@ public class Brain {
             connection.alterWeight();
             connection.reset();
         }
-        return results;
+        return out;
     }
 
     public void drawNet() {
