@@ -3,6 +3,7 @@ package com.smallworld.game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
@@ -17,32 +18,36 @@ import com.badlogic.gdx.physics.box2d.World;
 import com.smallworld.game.phenotypes.Features;
 import com.smallworld.game.screens.GameScreen;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 
 
 public class GameWorld implements ContactListener {
+    public GameScreen screen;
     public World physics;
     public final float width;
-    public float tide;
+    private final float TIDE_ORIGINAL_POS = 0.6f;
     public final float height;
+    public float tide;
     public float time = 0f;
-    private Experiment experiment;
     private boolean paused = false;
+    private Experiment experiment;
     private SpriteBatch batch = new SpriteBatch();
     private Box2DDebugRenderer debugRenderer = new Box2DDebugRenderer();
-    public Vector2 point;
-    public GameScreen screen;
+    public ShapeRenderer shapeRenderer = new ShapeRenderer();
     private Sea sea;
+    private ArrayList<Food> food = new ArrayList<Food>();
 
     public GameWorld(final int w, final int h, GameScreen screen) {
         this.width = w;
         this.height = h;
-        this.tide = 2 * w / 3;
+        this.tide = this.TIDE_ORIGINAL_POS * w;
         this.physics = new World(new Vector2(0, 0), true);
+        this.physics.setContactListener(this);
         this.createWorldBoundaries();
         this.experiment = new Experiment(this);
         this.experiment.start();
-        this.point = new Vector2(w / 2f, h / 2f);
         this.screen = screen;
         this.sea = new Sea(this);
     }
@@ -53,7 +58,7 @@ public class GameWorld implements ContactListener {
         Body groundBody = this.physics.createBody(groundBodyDef);
         ChainShape shape = new ChainShape();
         Vector2[] boundaries = {new Vector2(0, 0), new Vector2(width, 0), new Vector2(width, height),
-                new Vector2(0, height), new Vector2(0, 0)};
+                                new Vector2(0, height), new Vector2(0, 0)};
         shape.createChain(boundaries);
         groundBody.createFixture(shape, 0.0f);
         shape.dispose();
@@ -71,16 +76,33 @@ public class GameWorld implements ContactListener {
         this.experiment.stop();
         this.physics.dispose();
         this.batch.dispose();
+        this.shapeRenderer.dispose();
         this.sea.dispose();
     }
 
     private void updateTide() {
-        this.tide = 2 * this.width / 3 + (float)Math.sin(this.time / 2) * 5;
+        this.tide = this.TIDE_ORIGINAL_POS * this.width + (float)Math.sin(this.time / 2) * 5;
+    }
+
+    private void regulateFood() {
+        Iterator<Food> iterator = this.food.iterator();
+        while (iterator.hasNext()) {
+            Food f = iterator.next();
+            if (f.eaten) {
+                this.physics.destroyBody(f.body);
+                iterator.remove();
+            }
+        }
+        int i = 0;
+        if (this.time % 10 != 0)
+            i = Rand.rInt(0, 10);
+        while (i-- > 0 && this.food.size() < 50)
+            this.food.add(new Food(this));
     }
 
     public void render(HashMap<String, Texture> textures) {
         if (!this.paused) {
-            this.time = (this.time + Gdx.graphics.getDeltaTime()) % 101f;
+            this.time = this.time + Gdx.graphics.getDeltaTime();
             this.updateTide();
             this.batch.setProjectionMatrix(this.screen.camera.combined);
             this.batch.begin();
@@ -91,10 +113,15 @@ public class GameWorld implements ContactListener {
             }
             this.batch.end();
             //this.debugRenderer.render(this.physics, this.screen.camera.combined);
-
+            this.shapeRenderer.setProjectionMatrix(this.screen.camera.combined);
+            this.shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
             this.experiment.update();
+            for (final Food food : this.food)
+                food.render(this.shapeRenderer);
+            this.shapeRenderer.end();
             this.sea.render();
             this.physics.step(1 / 60f, 6, 2);
+            this.regulateFood();
             long currentTime = System.nanoTime() / 1000000000;
             if (this.experiment.TIME_BETWEEN_GEN != 0 && currentTime - this.experiment.nextGen > this.experiment.TIME_BETWEEN_GEN)
                 this.experiment.nextGeneration();
@@ -103,25 +130,36 @@ public class GameWorld implements ContactListener {
 
     @Override
     public void beginContact (Contact contact) {
-        this.updateActorSensor(contact, 1);
+        // make sure only one of the fixtures is a sensor
+        if (contact.getFixtureA().getUserData() instanceof Features.Sensor ^
+                contact.getFixtureB().getUserData() instanceof Features.Sensor) {
+            this.updateActorSensor(contact, 1);
+        } else if (contact.getFixtureA().getUserData() instanceof Food &&
+                contact.getFixtureB().getBody().getUserData() instanceof Actor) {
+            ((Actor)contact.getFixtureB().getBody().getUserData()).eat((Food) contact.getFixtureA().getUserData());
+        } else if (contact.getFixtureA().getBody().getUserData() instanceof Actor &&
+                contact.getFixtureB().getUserData() instanceof Food) {
+            ((Actor)contact.getFixtureA().getBody().getUserData()).eat((Food)contact.getFixtureB().getUserData());
+        }
     }
 
     private void updateActorSensor(Contact contact, float sensorValue) {
         Fixture fixtureA = contact.getFixtureA();
         Fixture fixtureB = contact.getFixtureB();
 
-        // make sure only one of the fixtures is a sensor
-        if (fixtureA.isSensor() ^ fixtureB.isSensor()) {
-            if (fixtureA.isSensor())
-                ((Features.Sensor)fixtureA.getUserData()).setValue(sensorValue);
-            else
-                ((Features.Sensor)fixtureA.getUserData()).setValue(sensorValue);
-        }
+        if (fixtureA.isSensor())
+            ((Features.Sensor)fixtureA.getUserData()).setValue(sensorValue);
+        else
+            ((Features.Sensor)fixtureB.getUserData()).setValue(sensorValue);
     }
 
     @Override
     public void endContact(Contact contact) {
-        this.updateActorSensor(contact, 0);
+         // make sure only one of the fixtures is a sensor
+        if (contact.getFixtureA().getUserData() instanceof Features.Sensor ^
+                contact.getFixtureB().getUserData() instanceof Features.Sensor) {
+            this.updateActorSensor(contact, 0);
+        }
     }
 
     @Override

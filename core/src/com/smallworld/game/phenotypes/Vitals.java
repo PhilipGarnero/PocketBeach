@@ -35,6 +35,11 @@ public class Vitals {
         }
     }
 
+    public void addEnergy(float value) {
+        this.energy += value;
+        this.energy = Math.min(this.energy, 100f);
+    }
+
     public float getEnergyPercentage() {
         return this.energy / 100f;
     }

@@ -1,7 +1,6 @@
 package com.smallworld.game;
 
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
@@ -24,7 +23,6 @@ public class Actor {
     public Features features;
     private Brain brain;
     private Experiment.FitnessEvaluation fitnessEvaluation;
-    private ShapeRenderer shapeRenderer = new ShapeRenderer();
     public MouseJoint mouseJoint = null;
 
     public Actor(GameWorld world, int id, Experiment.FitnessEvaluation fitnessEvaluation, Genotype genotype, Vector2 position) {
@@ -44,6 +42,7 @@ public class Actor {
         BodyDef bodyDef = new BodyDef();
         bodyDef.type = BodyDef.BodyType.DynamicBody;
         bodyDef.position.set(position);
+        bodyDef.fixedRotation = true;
         this.body = this.world.physics.createBody(bodyDef);
         this.body.setUserData(this);
     }
@@ -75,24 +74,19 @@ public class Actor {
             this.world.screen.inputs.mouseJoint = null;
         }
         this.world.physics.destroyBody(this.body);
-        this.shapeRenderer.dispose();
     }
 
     public void render() {
-        this.shapeRenderer.setProjectionMatrix(this.world.screen.camera.combined);
-        this.shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
-        this.shapeRenderer.setColor(new Color());
-        this.shapeRenderer.setColor(this.getHealthColor());
-        this.shapeRenderer.circle(this.body.getPosition().x, this.body.getPosition().y, 1);
-        this.shapeRenderer.end();
+        this.world.shapeRenderer.setColor(this.getHealthColor());
+        this.world.shapeRenderer.circle(this.body.getPosition().x, this.body.getPosition().y, 1);
     }
 
     private Color getHealthColor() {
         float health = this.vitals.getEnergyPercentage();
         float r = 1 - health + 1f/(float)Math.exp(Math.pow((health - 0.5f), 2) / 0.1);
-        float g = 1 - r;
-        float b = 0f;
-        float a = 1f;
+        float g = health + 1f/(float)Math.exp(Math.pow((health - 0.5f), 2) / 0.1);
+        float b = 0;
+        float a = 1;
         return new Color(r, g, b, a);
     }
 
@@ -106,6 +100,11 @@ public class Actor {
 
     public boolean inWater() {
         return this.body.getPosition().x > this.world.tide;
+    }
+
+    public void eat(Food f) {
+        f.eaten = true;
+        this.vitals.addEnergy(f.nutritionalValue);
     }
 
     public void update() {

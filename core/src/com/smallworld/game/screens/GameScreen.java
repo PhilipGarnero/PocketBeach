@@ -12,7 +12,6 @@ import com.smallworld.game.GameInputs;
 import com.smallworld.game.GameWorld;
 import com.smallworld.game.SmallWorld;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 
 public class GameScreen implements Screen {
@@ -37,6 +36,7 @@ public class GameScreen implements Screen {
         this.textures.put("sand", new Texture(Gdx.files.internal("beach-sand.png")));
         this.textures.put("sea", new Texture(Gdx.files.internal("beach-sea.png")));
         this.textures.put("tide-noise", new Texture(Gdx.files.internal("water-normals.png")));
+        this.textures.get("tide-noise").setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
     }
 
     private void setCamera() {
@@ -65,7 +65,6 @@ public class GameScreen implements Screen {
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         this.gameWorld.render(this.textures);
-
     }
 
     @Override

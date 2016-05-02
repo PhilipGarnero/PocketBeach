@@ -3,12 +3,9 @@ package com.smallworld.game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Mesh;
-import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.VertexAttribute;
 import com.badlogic.gdx.graphics.VertexAttributes.Usage;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
-import com.badlogic.gdx.math.MathUtils;
 
 
 public class Sea {
@@ -36,21 +33,20 @@ public class Sea {
 	}
 
 	public void render() {
-		this.mesh.setVertices(new float[]{this.world.width, 0, 1, 1,
-				this.world.tide - 1, 0, 0, 1,
-				this.world.tide - 1, this.world.height, 0, 0,
-				this.world.width, this.world.height, 1, 0});
-
-		Gdx.gl20.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
-		Gdx.gl20.glEnable(GL20.GL_BLEND);
+        Gdx.gl20.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+        Gdx.gl20.glEnable(GL20.GL_BLEND);
+        this.mesh.setVertices(new float[]{this.world.tide - 2, 0, 3, 3,
+                this.world.width, 0, 0, 3,
+                this.world.width, this.world.height, 0, 0,
+                this.world.tide - 2, this.world.height, 3, 0});
 		this.world.screen.textures.get("tide-noise").bind(1);
-		this.world.screen.textures.get("sea").bind(2);
-		this.shader.begin();
-		this.shader.setUniformMatrix("u_worldView", this.world.screen.camera.combined);
-		this.shader.setUniformi("u_noiseTexture", 1);
-		this.shader.setUniformi("u_waveTexture", 2);
-		this.shader.setUniformf("u_time", this.world.time);
-		this.mesh.render(this.shader, GL20.GL_TRIANGLE_FAN);
-		this.shader.end();
+        this.shader.begin();
+        this.shader.setUniformMatrix("u_worldView", this.world.screen.camera.combined);
+        this.shader.setUniformi("u_noiseTexture", 1);
+        this.shader.setUniform4fv("u_seaColor", new float[]{0f, 0.7f, 1f, 0.3f}, 0, 4);
+        this.shader.setUniformf("u_time", this.world.time);
+        this.shader.setUniformf("u_cyclingTime", (float)(this.world.time % (Math.PI * 2)));
+        this.mesh.render(this.shader, GL20.GL_TRIANGLE_FAN);
+        this.shader.end();
 	}
 }

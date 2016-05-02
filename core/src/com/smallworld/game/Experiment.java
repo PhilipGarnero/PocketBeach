@@ -2,15 +2,12 @@ package com.smallworld.game;
 
 import com.badlogic.gdx.math.Vector2;
 
-import java.util.Arrays;
-import java.util.List;
-
 public class Experiment {
     public final int MAX_POP_SIZE = 100;
     public final int RANDOM_ACTORS_NUMBER = 10;
     public final float RANK_PROBABILITY_CONSTANT = 0.2f;
     public final boolean REVERSE_RANK = false;
-    public final int TIME_BETWEEN_GEN = 15;
+    public final int TIME_BETWEEN_GEN = 0;
     public int popIndex;
     public int currentGen;
     private GameWorld world;
