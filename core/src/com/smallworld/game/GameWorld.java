@@ -1,7 +1,7 @@
 package com.smallworld.game;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
@@ -19,7 +19,6 @@ import com.smallworld.game.phenotypes.Features;
 import com.smallworld.game.screens.GameScreen;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 
 
@@ -33,10 +32,11 @@ public class GameWorld implements ContactListener {
     public float time = 0f;
     private boolean paused = false;
     private Experiment experiment;
-    private SpriteBatch batch = new SpriteBatch();
+    public SpriteBatch batch = new SpriteBatch();
     private Box2DDebugRenderer debugRenderer = new Box2DDebugRenderer();
     public ShapeRenderer shapeRenderer = new ShapeRenderer();
-    private Sea sea;
+    private SeaShader seaShader;
+    public ActorShader actorShader;
     private ArrayList<Food> food = new ArrayList<Food>();
 
     public GameWorld(final int w, final int h, GameScreen screen) {
@@ -49,7 +49,8 @@ public class GameWorld implements ContactListener {
         this.experiment = new Experiment(this);
         this.experiment.start();
         this.screen = screen;
-        this.sea = new Sea(this);
+        this.seaShader = new SeaShader(this);
+        this.actorShader = new ActorShader(this);
     }
 
     private void createWorldBoundaries() {
@@ -77,7 +78,8 @@ public class GameWorld implements ContactListener {
         this.physics.dispose();
         this.batch.dispose();
         this.shapeRenderer.dispose();
-        this.sea.dispose();
+        this.seaShader.dispose();
+        this.actorShader.dispose();
     }
 
     private void updateTide() {
@@ -100,26 +102,28 @@ public class GameWorld implements ContactListener {
             this.food.add(new Food(this));
     }
 
-    public void render(HashMap<String, Texture> textures) {
+    public void render() {
         if (!this.paused) {
             this.time = this.time + Gdx.graphics.getDeltaTime();
             this.updateTide();
             this.batch.setProjectionMatrix(this.screen.camera.combined);
+            this.screen.textures.get("sand").bind();
+            Gdx.gl.glActiveTexture(GL20.GL_TEXTURE0); // needed because binding the texture later for the seaShader messes up the indexes
             this.batch.begin();
             for (int i = 0; i < this.height; i += 5) {
                 for (int j = 0; j < this.width; j += 5) {
-                    this.batch.draw(textures.get("sand"), j, i, 5, 5);
+                    this.batch.draw(this.screen.textures.get("sand"), j, i, 5, 5);
                 }
             }
-            this.batch.end();
-            this.debugRenderer.render(this.physics, this.screen.camera.combined);
-            this.shapeRenderer.setProjectionMatrix(this.screen.camera.combined);
-            this.shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
-            this.experiment.update();
+            this.screen.textures.get("actor").bind();
             for (final Food food : this.food)
-                food.render(this.shapeRenderer);
-            this.shapeRenderer.end();
-            this.sea.render();
+                food.render(this.batch, this.screen.textures.get("food"));
+            this.batch.end();
+            this.actorShader.begin();
+            this.experiment.update();
+            this.actorShader.end();
+            this.seaShader.render();
+            this.debugRenderer.render(this.physics, this.screen.camera.combined);
             this.physics.step(1 / 60f, 6, 2);
             this.regulateFood();
             long currentTime = System.nanoTime() / 1000000000;

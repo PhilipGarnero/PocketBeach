@@ -106,8 +106,8 @@ public class Features {
             float radius = 3;
             Vector2[] vertices = new Vector2[8];
             vertices[0] = new Vector2(0, 0);
-            for (int i = 0; i < 7; i++) {
-                float angle = i / 6.0f * (float)(Math.PI / 4f);
+            for (int i = 0; i <= 6; i++) {
+                float angle = i / 6.0f * (float)(Math.PI / 4f) - (float)(Math.PI / 8f);
                 vertices[i + 1] = new Vector2(radius * (float)Math.cos(angle), radius * (float)Math.sin(angle));
             }
             FixtureDef f = new FixtureDef();

@@ -34,9 +34,10 @@ public class GameScreen implements Screen {
 
     private void loadTextures() {
         this.textures.put("sand", new Texture(Gdx.files.internal("beach-sand.png")));
-        this.textures.put("sea", new Texture(Gdx.files.internal("beach-sea.png")));
-        this.textures.put("tide-noise", new Texture(Gdx.files.internal("water-normals.png")));
-        this.textures.get("tide-noise").setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
+        this.textures.put("water-normals", new Texture(Gdx.files.internal("water-normals.png")));
+        this.textures.get("water-normals").setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
+        this.textures.put("actor", new Texture(Gdx.files.internal("actor.png")));
+        this.textures.put("food", new Texture(Gdx.files.internal("food.png")));
     }
 
     private void setCamera() {
@@ -64,7 +65,7 @@ public class GameScreen implements Screen {
     public void render(float delta) {
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-        this.gameWorld.render(this.textures);
+        this.gameWorld.render();
     }
 
     @Override

@@ -77,11 +77,13 @@ public class Actor {
     }
 
     public void render() {
+        this.world.actorShader.draw(this);
+/*        this.world.batch.draw(this.world.screen.textures.get("actor"), this.body.getPosition().x - 1f, this.body.getPosition().y - 1, 2f, 2f);
         this.world.shapeRenderer.setColor(this.getHealthColor());
-        this.world.shapeRenderer.circle(this.body.getPosition().x, this.body.getPosition().y, 1);
+        this.world.shapeRenderer.circle(this.body.getPosition().x, this.body.getPosition().y, 1);*/
     }
 
-    private Color getHealthColor() {
+    public Color getHealthColor() {
         float health = this.vitals.getEnergyPercentage();
         float r = 1 - health + 1f/(float)Math.exp(Math.pow((health - 0.5f), 2) / 0.1);
         float g = health + 1f/(float)Math.exp(Math.pow((health - 0.5f), 2) / 0.1);
