@@ -24,6 +24,7 @@ public class GameInputs implements GestureDetector.GestureListener, InputProcess
     public MouseJoint mouseJoint = null;
     private Vector2 tmpv2 = new Vector2();
     private Vector3 tmpv3 = new Vector3();
+    private int finger = 0;
 
     public GameInputs(GameScreen screen) {
         this.cam = screen.camera;
@@ -34,7 +35,7 @@ public class GameInputs implements GestureDetector.GestureListener, InputProcess
     QueryCallback callback = new QueryCallback() {
         @Override
         public boolean reportFixture(Fixture fixture) {
-            if (fixture.testPoint(testPoint.x, testPoint.y)) {
+            if (fixture.testPoint(testPoint.x, testPoint.y) && fixture.getBody().getUserData() instanceof Actor) {
                 hitBody = fixture.getBody();
                 return false;
             } else {
@@ -45,34 +46,40 @@ public class GameInputs implements GestureDetector.GestureListener, InputProcess
 
     @Override
     public boolean touchDown(int x, int y, int pointer, int button) {
-        this.testPoint.set(x, y, 0);
-        this.screen.camera.unproject(this.testPoint);
-        this.hitBody = null;
-        this.gameWorld.physics.QueryAABB(callback, this.testPoint.x - 0.1f, this.testPoint.y - 0.1f, this.testPoint.x + 0.1f, this.testPoint.y + 0.1f);
-        if (this.hitBody != null) {
-            MouseJointDef def = new MouseJointDef();
-            def.bodyA = this.hitBody;
-            def.bodyB = this.hitBody;
-            def.collideConnected = true;
-            def.target.set(this.testPoint.x, this.testPoint.y);
-            def.maxForce = 1000.0f * this.hitBody.getMass();
-            this.mouseJoint = (MouseJoint)this.gameWorld.physics.createJoint(def);
-            Actor a = (Actor)this.hitBody.getUserData();
-            a.mouseJoint = this.mouseJoint;
-            this.hitBody.setAwake(true);
-            return false;
+        this.finger++;
+        if (this.finger == 1) {
+            this.testPoint.set(x, y, 0);
+            this.screen.camera.unproject(this.testPoint);
+            this.hitBody = null;
+            this.gameWorld.physics.QueryAABB(callback, this.testPoint.x - 0.1f, this.testPoint.y - 0.1f, this.testPoint.x + 0.1f, this.testPoint.y + 0.1f);
+            if (this.hitBody != null) {
+                MouseJointDef def = new MouseJointDef();
+                def.bodyA = this.hitBody;
+                def.bodyB = this.hitBody;
+                def.collideConnected = true;
+                def.target.set(this.testPoint.x, this.testPoint.y);
+                def.maxForce = 1000.0f * this.hitBody.getMass();
+                this.mouseJoint = (MouseJoint) this.gameWorld.physics.createJoint(def);
+                Actor a = (Actor) this.hitBody.getUserData();
+                a.mouseJoint = this.mouseJoint;
+                this.hitBody.setAwake(true);
+                return false;
+            }
         }
         return false;
     }
 
     @Override
     public boolean touchUp(int x, int y, int pointer, int button) {
-        if (this.mouseJoint != null) {
+        if (this.mouseJoint != null && this.finger == 1) {
             Actor a = (Actor)this.hitBody.getUserData();
             a.mouseJoint = null;
             this.gameWorld.physics.destroyJoint(this.mouseJoint);
             this.mouseJoint = null;
         }
+        this.finger--;
+        if (this.finger < 0)
+            this.finger = 0;
         return false;
     }
 
@@ -120,7 +127,7 @@ public class GameInputs implements GestureDetector.GestureListener, InputProcess
     }
 
     @Override
-    public boolean zoom (float originalDistance, float currentDistance){
+    public boolean zoom (float originalDistance, float currentDistance) {
         if (originalDistance < currentDistance) {
             this.cam.zoom -= 0.01;
         } else if (originalDistance > currentDistance) {

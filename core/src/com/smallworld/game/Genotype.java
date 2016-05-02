@@ -33,6 +33,7 @@ public class Genotype {
         this.GENE_PHENOTYPES_IDS.put("body", "01");
         this.GENE_PHENOTYPES_IDS.put("brain", "02");
         this.GENE_PHENOTYPES_IDS.put("vitals", "03");
+        this.GENE_PHENOTYPES_IDS.put("features", "04");
 
         this.dna = dna;
         if (this.dna == null)

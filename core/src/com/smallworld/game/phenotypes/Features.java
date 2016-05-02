@@ -1,6 +1,8 @@
 package com.smallworld.game.phenotypes;
 
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.physics.box2d.FixtureDef;
+import com.badlogic.gdx.physics.box2d.PolygonShape;
 import com.smallworld.game.Actor;
 
 import java.util.ArrayList;
@@ -13,7 +15,12 @@ public class Features {
 
     public Features(ArrayList<String> genes, Actor actor) {
         this.actor = actor;
+
         this.actuators.add(new MoveActuator(this.actor));
+        this.actuators.add(new RotateActuator(this.actor));
+
+        this.sensors.add(new OrientationSensor(this.actor));
+        this.sensors.add(new RadarSensor(this.actor));
         this.sensors.add(new TideSensor(this.actor));
         this.sensors.add(new WaterSensor(this.actor));
         this.sensors.add(new EnergySensor(this.actor));
@@ -81,6 +88,39 @@ public class Features {
         }
     }
 
+    public class OrientationSensor extends Sensor {
+        public OrientationSensor(Actor actor) {
+            super(actor);
+        }
+
+        @Override
+        public float getValue() {
+            return actor.body.getAngle() / 2 * (float)Math.PI;
+        }
+    }
+
+    public class RadarSensor extends Sensor {
+        public RadarSensor(Actor actor) {
+            super(actor);
+
+            float radius = 3;
+            Vector2[] vertices = new Vector2[8];
+            vertices[0] = new Vector2(0, 0);
+            for (int i = 0; i < 7; i++) {
+                float angle = i / 6.0f * (float)(Math.PI / 4f);
+                vertices[i + 1] = new Vector2(radius * (float)Math.cos(angle), radius * (float)Math.sin(angle));
+            }
+            FixtureDef f = new FixtureDef();
+            PolygonShape a = new PolygonShape();
+            a.set(vertices);
+            f.shape = a;
+            f.isSensor = true;
+            actor.body.createFixture(f).setUserData(this);
+            a.dispose();
+        }
+    }
+
+
     public abstract class Actuator {
         protected Actor actor;
 
@@ -115,6 +155,18 @@ public class Features {
             else {
                 this.actor.body.setLinearVelocity(v);
             }
+        }
+    }
+
+    public class RotateActuator extends Actuator {
+        public RotateActuator(Actor actor) {
+            super(actor);
+        }
+
+        @Override
+        public void act(Iterator<Float> it) {
+            float[] outputs = this.getOutputs(it, 1);
+            this.actor.body.setTransform(this.actor.body.getPosition(), outputs[0] * 2 * (float)Math.PI);
         }
     }
 }

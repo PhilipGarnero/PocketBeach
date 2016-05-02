@@ -5,9 +5,9 @@ import com.badlogic.gdx.math.Vector2;
 public class Experiment {
     public final int MAX_POP_SIZE = 100;
     public final int RANDOM_ACTORS_NUMBER = 10;
-    public final float RANK_PROBABILITY_CONSTANT = 0.2f;
-    public final boolean REVERSE_RANK = false;
-    public final int TIME_BETWEEN_GEN = 0;
+    public final float RANK_PROBABILITY_CONSTANT = 0.1f;
+    public final boolean REVERSE_RANK = true;
+    public final int TIME_BETWEEN_GEN = 30;
     public int popIndex;
     public int currentGen;
     private GameWorld world;
@@ -39,8 +39,8 @@ public class Experiment {
         Actor actor = new Actor(this.world, this.popIndex, new FitnessEvaluation() {
             public float evaluate(Actor actor) {
                 if (actor.isDead())
-                    return 0xFFFF;
-                return Math.abs(actor.body.getPosition().x - actor.world.tide);
+                    return 0;
+                return actor.vitals.energy;
             }
         }, genotype, pos);
         this.popIndex += 1;

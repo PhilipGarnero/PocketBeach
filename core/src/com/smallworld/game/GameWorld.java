@@ -112,7 +112,7 @@ public class GameWorld implements ContactListener {
                 }
             }
             this.batch.end();
-            //this.debugRenderer.render(this.physics, this.screen.camera.combined);
+            this.debugRenderer.render(this.physics, this.screen.camera.combined);
             this.shapeRenderer.setProjectionMatrix(this.screen.camera.combined);
             this.shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
             this.experiment.update();
@@ -147,6 +147,8 @@ public class GameWorld implements ContactListener {
         Fixture fixtureA = contact.getFixtureA();
         Fixture fixtureB = contact.getFixtureB();
 
+        if (fixtureA.getUserData() instanceof Food || fixtureB.getUserData() instanceof Food)
+            sensorValue = -1f;
         if (fixtureA.isSensor())
             ((Features.Sensor)fixtureA.getUserData()).setValue(sensorValue);
         else

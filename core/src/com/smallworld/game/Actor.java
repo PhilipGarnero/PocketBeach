@@ -70,8 +70,8 @@ public class Actor {
 
     public void dispose() {
         if (this.mouseJoint != null) {
-            this.world.physics.destroyJoint(this.mouseJoint);
             this.world.screen.inputs.mouseJoint = null;
+            this.world.physics.destroyJoint(this.mouseJoint);
         }
         this.world.physics.destroyBody(this.body);
     }
