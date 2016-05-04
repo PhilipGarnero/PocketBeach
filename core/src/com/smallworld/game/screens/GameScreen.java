@@ -16,7 +16,7 @@ import java.util.HashMap;
 
 public class GameScreen implements Screen {
     final SmallWorld game;
-    public final static float CAMERA_VIEWPOINT = 60f;
+    public final static float CAMERA_VIEWPOINT = 100f;
     public final static int WORLD_WIDTH = 100;
     public final static int WORLD_HEIGHT = 61;
     public OrthographicCamera camera;
@@ -38,6 +38,7 @@ public class GameScreen implements Screen {
         this.textures.get("water-normals").setWrap(Texture.TextureWrap.Repeat, Texture.TextureWrap.Repeat);
         this.textures.put("actor", new Texture(Gdx.files.internal("actor.png")));
         this.textures.put("food", new Texture(Gdx.files.internal("food.png")));
+        this.textures.put("cloud", new Texture(Gdx.files.internal("cloud.png")));
     }
 
     private void setCamera() {
@@ -65,7 +66,7 @@ public class GameScreen implements Screen {
     public void render(float delta) {
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-        this.gameWorld.render();
+        this.gameWorld.update();
     }
 
     @Override

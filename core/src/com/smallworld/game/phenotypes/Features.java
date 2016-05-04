@@ -18,6 +18,7 @@ public class Features {
 
         this.actuators.add(new MoveActuator(this.actor));
         this.actuators.add(new RotateActuator(this.actor));
+        this.actuators.add(new LayEggsActuator(this.actor));
 
         this.sensors.add(new OrientationSensor(this.actor));
         this.sensors.add(new RadarSensor(this.actor));
@@ -167,6 +168,25 @@ public class Features {
         public void act(Iterator<Float> it) {
             float[] outputs = this.getOutputs(it, 1);
             this.actor.body.setTransform(this.actor.body.getPosition(), outputs[0] * 2 * (float)Math.PI);
+        }
+    }
+
+    public class LayEggsActuator extends Actuator {
+        private long lastLay;
+
+        public LayEggsActuator(Actor actor) {
+            super(actor);
+            this.lastLay = System.nanoTime() / 1000000000;
+        }
+
+        @Override
+        public void act(Iterator<Float> it) {
+            float[] outputs = this.getOutputs(it, 1);
+            long currentTime = System.nanoTime() / 1000000000;
+            if (outputs[0] > 0f && currentTime - this.lastLay > Actor.EGG_SPAN) {
+                this.lastLay = currentTime;
+                this.actor.layEggs();
+            }
         }
     }
 }

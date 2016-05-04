@@ -31,13 +31,15 @@ public class GameWorld implements ContactListener {
     public float tide;
     public float time = 0f;
     private boolean paused = false;
-    private Experiment experiment;
+    public Experiment experiment;
     public SpriteBatch batch = new SpriteBatch();
     private Box2DDebugRenderer debugRenderer = new Box2DDebugRenderer();
     public ShapeRenderer shapeRenderer = new ShapeRenderer();
     private SeaShader seaShader;
-    public ActorShader actorShader;
+    private ActorShader actorShader;
     private ArrayList<Food> food = new ArrayList<Food>();
+    public ArrayList<Actor> actorQueue = new ArrayList<Actor>();
+    public ArrayList<Actor.EggCloud> eggs = new ArrayList<Actor.EggCloud>();
 
     public GameWorld(final int w, final int h, GameScreen screen) {
         this.width = w;
@@ -82,7 +84,7 @@ public class GameWorld implements ContactListener {
         this.actorShader.dispose();
     }
 
-    private void updateTide() {
+    private void updateTideLevel() {
         this.tide = this.TIDE_ORIGINAL_POS * this.width + (float)Math.sin(this.time / 2) * 5;
     }
 
@@ -102,34 +104,57 @@ public class GameWorld implements ContactListener {
             this.food.add(new Food(this));
     }
 
-    public void render() {
-        if (!this.paused) {
-            this.time = this.time + Gdx.graphics.getDeltaTime();
-            this.updateTide();
-            this.batch.setProjectionMatrix(this.screen.camera.combined);
-            this.screen.textures.get("sand").bind();
-            Gdx.gl.glActiveTexture(GL20.GL_TEXTURE0); // needed because binding the texture later for the seaShader messes up the indexes
-            this.batch.begin();
-            for (int i = 0; i < this.height; i += 5) {
-                for (int j = 0; j < this.width; j += 5) {
-                    this.batch.draw(this.screen.textures.get("sand"), j, i, 5, 5);
-                }
+    public void updateEggs(long currentTime) {
+        Iterator<Actor.EggCloud> iterator = this.eggs.iterator();
+        while (iterator.hasNext()) {
+            Actor.EggCloud f = iterator.next();
+            if (currentTime - f.layedTime > Actor.EGG_SPAN) {
+                this.physics.destroyBody(f.body);
+                iterator.remove();
             }
-            this.screen.textures.get("actor").bind();
-            for (final Food food : this.food)
-                food.render(this.batch, this.screen.textures.get("food"));
-            this.batch.end();
-            this.actorShader.begin();
-            this.experiment.update();
-            this.actorShader.end();
-            this.seaShader.render();
-            this.debugRenderer.render(this.physics, this.screen.camera.combined);
-            this.physics.step(1 / 60f, 6, 2);
-            this.regulateFood();
+        }
+    }
+
+    public void update() {
+        if (!this.paused) {
             long currentTime = System.nanoTime() / 1000000000;
+            this.time = this.time + Gdx.graphics.getDeltaTime();
+            this.updateTideLevel();
+            this.regulateFood();
+            this.updateEggs(currentTime);
+            this.experiment.update();
+            for (Actor actor : this.actorQueue)
+                this.experiment.addActor(actor);
+            actorQueue.clear();
             if (this.experiment.TIME_BETWEEN_GEN != 0 && currentTime - this.experiment.nextGen > this.experiment.TIME_BETWEEN_GEN)
                 this.experiment.nextGeneration();
+            this.render();
+            this.physics.step(1 / 60f, 6, 2);
         }
+    }
+
+    public void render() {
+        this.batch.setProjectionMatrix(this.screen.camera.combined);
+        this.screen.textures.get("sand").bind();
+        Gdx.gl.glActiveTexture(GL20.GL_TEXTURE0); // needed because binding the texture later for the seaShader messes up the indexes
+        this.batch.begin();
+        for (int i = 0; i < this.height; i += 10) {
+            for (int j = 0; j < this.width; j += 10) {
+                this.batch.draw(this.screen.textures.get("sand"), j, i, 10, 10);
+            }
+        }
+        this.screen.textures.get("actor").bind();
+        for (final Food food : this.food)
+            food.render(this.batch, this.screen.textures.get("food"));
+        for (final Actor.EggCloud egg : this.eggs)
+            egg.render(this.batch, this.screen.textures.get("cloud"));
+        this.batch.end();
+        this.actorShader.begin();
+        for (final Actor actor : this.experiment.getActors())
+            this.actorShader.draw(actor);
+        this.actorShader.end();
+        this.seaShader.render();
+        //this.debugRenderer.render(this.physics, this.screen.camera.combined);
     }
 
     @Override

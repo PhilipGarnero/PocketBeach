@@ -1,6 +1,8 @@
 package com.smallworld.game;
 
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
@@ -24,6 +26,7 @@ public class Actor {
     private Brain brain;
     private Experiment.FitnessEvaluation fitnessEvaluation;
     public MouseJoint mouseJoint = null;
+    public static int EGG_SPAN = 10;
 
     public Actor(GameWorld world, int id, Experiment.FitnessEvaluation fitnessEvaluation, Genotype genotype, Vector2 position) {
         this.world = world;
@@ -76,13 +79,6 @@ public class Actor {
         this.world.physics.destroyBody(this.body);
     }
 
-    public void render() {
-        this.world.actorShader.draw(this);
-/*        this.world.batch.draw(this.world.screen.textures.get("actor"), this.body.getPosition().x - 1f, this.body.getPosition().y - 1, 2f, 2f);
-        this.world.shapeRenderer.setColor(this.getHealthColor());
-        this.world.shapeRenderer.circle(this.body.getPosition().x, this.body.getPosition().y, 1);*/
-    }
-
     public Color getHealthColor() {
         float health = this.vitals.getEnergyPercentage();
         float r = 1 - health + 1f/(float)Math.exp(Math.pow((health - 0.5f), 2) / 0.1);
@@ -106,14 +102,21 @@ public class Actor {
 
     public void eat(Food f) {
         f.eaten = true;
-        this.vitals.addEnergy(f.nutritionalValue);
+        this.vitals.addEnergy(f.getNutritionalValue());
+    }
+
+    public void layEggs() {
+        this.world.eggs.add(new EggCloud(this));
+        this.vitals.giveBirth();
     }
 
     public void update() {
         this.vitals.update(this.inWater());
-        if (!this.isDead())
+        if (!this.inWater())
+            this.body.setLinearVelocity(new Vector2(0, 0));
+        if (!this.isDead()) {
             this.applyValuesToActuators(this.brain.think(this.getSensorsValues()));
-        this.render();
+        }
     }
 
     private ArrayList<Float> getSensorsValues() {
@@ -128,6 +131,43 @@ public class Actor {
         Iterator<Features.Actuator> actuatorIt = this.features.actuators.iterator();
         while (outIt.hasNext() && actuatorIt.hasNext()) {
             actuatorIt.next().act(outIt);
+        }
+    }
+
+    class EggCloud {
+        public Body body;
+        public long layedTime;
+        public Genotype genotype;
+
+        public EggCloud(final Actor actor) {
+            this.genotype = actor.genotype;
+            this.layedTime = System.nanoTime() / 1000000000;
+            BodyDef bodyDef = new BodyDef();
+            bodyDef.type = BodyDef.BodyType.StaticBody;
+            bodyDef.position.set(actor.body.getPosition());
+            this.body = actor.world.physics.createBody(bodyDef);
+            CircleShape circle = new CircleShape();
+            circle.setRadius(2f);
+            FixtureDef fixtureDef = new FixtureDef();
+            fixtureDef.shape = circle;
+            fixtureDef.isSensor = true;
+            this.body.createFixture(fixtureDef).setUserData(this);
+            circle.dispose();
+            checkForOverlap(bodyDef.position, actor.world);
+        }
+
+        private void checkForOverlap(final Vector2 v, GameWorld world) {
+            for (final EggCloud egg : world.eggs) {
+                if (egg.body.getFixtureList().get(0).testPoint(v.x, v.y)) {
+                    Actor a = world.experiment.createActor(Genotype.reproduce(egg.genotype, this.genotype));
+                    a.body.setTransform(egg.body.getPosition(), 0);
+                    world.actorQueue.add(a);
+                }
+            }
+        }
+
+        public void render(SpriteBatch renderer, Texture t) {
+            renderer.draw(t, this.body.getPosition().x - 2f, this.body.getPosition().y - 2f, 4f, 4f);
         }
     }
 }

@@ -2,12 +2,14 @@ package com.smallworld.game;
 
 import com.badlogic.gdx.math.Vector2;
 
+import java.util.ArrayList;
+
 public class Experiment {
-    public final int MAX_POP_SIZE = 100;
+    public final int MAX_POP_SIZE = 200;
     public final int RANDOM_ACTORS_NUMBER = 10;
     public final float RANK_PROBABILITY_CONSTANT = 0.1f;
     public final boolean REVERSE_RANK = true;
-    public final int TIME_BETWEEN_GEN = 30;
+    public final int TIME_BETWEEN_GEN = 0;
     public int popIndex;
     public int currentGen;
     private GameWorld world;
@@ -55,6 +57,14 @@ public class Experiment {
             if (this.population.size() == 0)
                 this.population.fillPop();
         }
+    }
+
+    public void addActor(Actor a) {
+        this.population.append(a);
+    }
+
+    public ArrayList<Actor> getActors() {
+        return this.population.actors;
     }
 
     public void nextGeneration() {

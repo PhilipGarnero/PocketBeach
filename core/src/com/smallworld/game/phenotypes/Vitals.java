@@ -35,6 +35,11 @@ public class Vitals {
         }
     }
 
+    public void giveBirth() {
+        this.energy -= 20;
+        this.temperature += 2;
+    }
+
     public void addEnergy(float value) {
         this.energy += value;
         this.energy = Math.min(this.energy, 300f);
