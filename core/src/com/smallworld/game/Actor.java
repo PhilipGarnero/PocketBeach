@@ -106,7 +106,9 @@ public class Actor {
     }
 
     public void layEggs() {
-        this.world.eggs.add(new EggCloud(this));
+        EggCloud e = new EggCloud(this);
+        if (!e.inseminated)
+            this.world.eggs.add(e);
         this.vitals.giveBirth();
     }
 
@@ -137,37 +139,57 @@ public class Actor {
     class EggCloud {
         public Body body;
         public long layedTime;
+        public boolean inseminated = false;
         public Genotype genotype;
+        private GameWorld world;
 
-        public EggCloud(final Actor actor) {
+        public EggCloud(Actor actor) {
+            this.world = actor.world;
             this.genotype = actor.genotype;
             this.layedTime = System.nanoTime() / 1000000000;
-            BodyDef bodyDef = new BodyDef();
-            bodyDef.type = BodyDef.BodyType.StaticBody;
-            bodyDef.position.set(actor.body.getPosition());
-            this.body = actor.world.physics.createBody(bodyDef);
-            CircleShape circle = new CircleShape();
-            circle.setRadius(2f);
-            FixtureDef fixtureDef = new FixtureDef();
-            fixtureDef.shape = circle;
-            fixtureDef.isSensor = true;
-            this.body.createFixture(fixtureDef).setUserData(this);
-            circle.dispose();
-            checkForOverlap(bodyDef.position, actor.world);
+            this.checkForOverlap(actor.body.getPosition());
+            if (!this.inseminated) {
+                BodyDef bodyDef = new BodyDef();
+                bodyDef.type = BodyDef.BodyType.StaticBody;
+                bodyDef.position.set(actor.body.getPosition());
+                this.body = this.world.physics.createBody(bodyDef);
+                CircleShape circle = new CircleShape();
+                circle.setRadius(2f);
+                FixtureDef fixtureDef = new FixtureDef();
+                fixtureDef.shape = circle;
+                fixtureDef.isSensor = true;
+                this.body.createFixture(fixtureDef).setUserData(this);
+                circle.dispose();
+            } else
+                this.body = null;
         }
 
-        private void checkForOverlap(final Vector2 v, GameWorld world) {
-            for (final EggCloud egg : world.eggs) {
-                if (egg.body.getFixtureList().get(0).testPoint(v.x, v.y)) {
-                    Actor a = world.experiment.createActor(Genotype.reproduce(egg.genotype, this.genotype));
-                    a.body.setTransform(egg.body.getPosition(), 0);
-                    world.actorQueue.add(a);
+        private void checkForOverlap(final Vector2 v) {
+            Iterator<EggCloud> it = this.world.eggs.iterator();
+            while (it.hasNext()) {
+                EggCloud egg = it.next();
+                if (egg.body.getFixtureList().get(0).testPoint(v)) {
+                    this.inseminated = true;
+                    egg.hatch(this);
+                    egg.dispose();
+                    it.remove();
                 }
             }
         }
 
+        private void hatch(EggCloud egg) {
+            Actor a = this.world.experiment.createActor(Genotype.reproduce(egg.genotype, this.genotype));
+            a.body.setTransform(this.body.getPosition(), 0);
+            this.world.actorQueue.add(a);
+        }
+
         public void render(SpriteBatch renderer, Texture t) {
             renderer.draw(t, this.body.getPosition().x - 2f, this.body.getPosition().y - 2f, 4f, 4f);
+        }
+
+        public void dispose() {
+            if (this.body != null)
+                this.world.physics.destroyBody(this.body);
         }
     }
 }

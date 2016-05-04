@@ -18,7 +18,7 @@ public class GameScreen implements Screen {
     final SmallWorld game;
     public final static float CAMERA_VIEWPOINT = 100f;
     public final static int WORLD_WIDTH = 100;
-    public final static int WORLD_HEIGHT = 61;
+    public final static int WORLD_HEIGHT = 55;
     public OrthographicCamera camera;
     public GameWorld gameWorld;
     public HashMap<String, Texture> textures = new HashMap<String, Texture>();

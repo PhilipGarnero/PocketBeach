@@ -109,7 +109,7 @@ public class GameWorld implements ContactListener {
         while (iterator.hasNext()) {
             Actor.EggCloud f = iterator.next();
             if (currentTime - f.layedTime > Actor.EGG_SPAN) {
-                this.physics.destroyBody(f.body);
+                f.dispose();
                 iterator.remove();
             }
         }
