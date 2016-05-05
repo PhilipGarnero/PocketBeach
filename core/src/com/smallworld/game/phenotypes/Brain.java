@@ -2,18 +2,18 @@ package com.smallworld.game.phenotypes;
 
 import com.smallworld.game.Actor;
 import com.smallworld.game.Genotype;
+import com.smallworld.game.Rand;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 
 public class Brain {
-    private static int NEURON_ID_CODE_LENGTH = 1;
-    private static int CONNECTION_WEIGHT_CODE_LENGTH = 4;
-    private static int CONNECTION_CODE_LENGTH = NEURON_ID_CODE_LENGTH * 2 + CONNECTION_WEIGHT_CODE_LENGTH;
-    private static float BASE_10_MAX = (float)Math.pow(Genotype.GENE_BASE, CONNECTION_WEIGHT_CODE_LENGTH) / 2f;
+    private static int NEURON_ID_CODE_LENGTH = 2;
+    private static int WEIGHT_CODE_LENGTH = 3;
+    private static int CONNECTION_CODE_LENGTH = NEURON_ID_CODE_LENGTH * 2 + WEIGHT_CODE_LENGTH;
+    private static float BASE_10_MAX = (float)Math.pow(Genotype.GENE_BASE, WEIGHT_CODE_LENGTH) / 2f;
 
-    private ArrayList<String> genes;
     private ArrayList<InputNeuron> inputs = new ArrayList<InputNeuron>();
     private ArrayList<Neuron> hiddens = new ArrayList<Neuron>();
     private ArrayList<OutputNeuron> outputs = new ArrayList<OutputNeuron>();
@@ -22,37 +22,61 @@ public class Brain {
     private Actor actor;
 
     public Brain(ArrayList<String> genes, Actor actor) {
-        this.genes = genes;
         this.actor = actor;
-        this.geneParser();
+        this.netBuilder(GeneCoder.decode(genes));
     }
 
+    public static class GeneCoder {
+        public static ArrayList<ConnectionBuilder> decode(ArrayList<String> genes) {
+            ArrayList<ConnectionBuilder> connections = new ArrayList<ConnectionBuilder>();
+            for (String gene : genes) {
+                for (int i = 0; i + CONNECTION_CODE_LENGTH <= gene.length(); i = i + CONNECTION_CODE_LENGTH) {
+                    String code = gene.substring(i, i + CONNECTION_CODE_LENGTH);
+                    connections.add(new ConnectionBuilder(code));
+                }
+            }
+            return connections;
+        }
 
-    private class ConnectionBuilder {
+        public static String encode(Brain phenotype) {
+            String gene = "";
+            for (final Synapse synapse : phenotype.connections) {
+                String inId = Integer.toHexString(synapse.origin.id);
+                while (inId.length() < NEURON_ID_CODE_LENGTH)
+                    inId = "0" + inId;
+                gene += inId;
+                String weight = Integer.toHexString(Math.round(synapse.weight * BASE_10_MAX + BASE_10_MAX));
+                while (weight.length() < WEIGHT_CODE_LENGTH)
+                    weight = "0" + weight;
+                gene += weight;
+                String outId = Integer.toHexString(synapse.aim.id);
+                while (outId.length() < NEURON_ID_CODE_LENGTH)
+                    outId = "0" + outId;
+                gene += outId;
+            }
+            return gene;
+        }
+
+        public static String generateRandomDNA() {
+            String gene = "";
+            int nb = Rand.rInt(1, 30);
+            for (int i = 0; i < nb; i++)
+                gene += Rand.rChoices(Genotype.GENE_CHAR_POOL, CONNECTION_CODE_LENGTH);
+            return gene;
+        }
+    }
+
+    private static class ConnectionBuilder {
         private int inNeuronId;
         private float weight;
         private int outNeuronId;
 
         public ConnectionBuilder(String code) {
             this.inNeuronId = Integer.parseInt(code.substring(0, NEURON_ID_CODE_LENGTH), Genotype.GENE_BASE);
-            this.weight = ((float)Integer.parseInt(code.substring(NEURON_ID_CODE_LENGTH,
-                    NEURON_ID_CODE_LENGTH + CONNECTION_WEIGHT_CODE_LENGTH), Genotype.GENE_BASE) - BASE_10_MAX) / BASE_10_MAX;
-            this.outNeuronId = Integer.parseInt(code.substring(NEURON_ID_CODE_LENGTH + CONNECTION_WEIGHT_CODE_LENGTH), Genotype.GENE_BASE);
+            this.weight = (Integer.parseInt(code.substring(NEURON_ID_CODE_LENGTH,
+                    NEURON_ID_CODE_LENGTH + WEIGHT_CODE_LENGTH), Genotype.GENE_BASE) - BASE_10_MAX) / BASE_10_MAX;
+            this.outNeuronId = Integer.parseInt(code.substring(NEURON_ID_CODE_LENGTH + WEIGHT_CODE_LENGTH), Genotype.GENE_BASE);
         }
-    }
-
-    private void geneParser() {
-        ArrayList<ConnectionBuilder> connections = new ArrayList<ConnectionBuilder>();
-        for (String gene : this.genes) {
-            ArrayList<String> codes = new ArrayList<String>();
-            for (int i = 0; i < gene.length(); i = i + CONNECTION_CODE_LENGTH)
-                codes.add(gene.substring(i, Math.min(i + CONNECTION_CODE_LENGTH, gene.length())));
-            if (codes.get(codes.size() - 1).length() < CONNECTION_CODE_LENGTH)
-                codes.remove(codes.size() - 1);
-            for (String code : codes)
-                connections.add(new ConnectionBuilder(code));
-        }
-        this.netBuilder(connections);
     }
 
     private void pathChecker(ArrayList<Integer> path, int check) {
@@ -101,7 +125,7 @@ public class Brain {
                 ArrayList<Integer> path = new ArrayList<Integer>();
                 path.add(connection.inNeuronId);
                 pathChecker(path, connection.outNeuronId);
-            } catch (RuntimeException e) {
+            } catch (RuntimeException e) { // A connection is forming a cycle.
                 continue;
             }
             if (!this.tree.containsKey(connection.inNeuronId))
@@ -170,7 +194,6 @@ public class Brain {
 
     class Neuron {
         private float THRESHOLD_LEVEL = 0.5f;
-        private float DECAY_RATE = 4f;
         private int id;
         protected ArrayList<Synapse> connections = new ArrayList<Synapse>();
         protected float value = 0.0f;

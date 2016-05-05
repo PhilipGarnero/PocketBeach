@@ -8,6 +8,8 @@ import com.smallworld.game.phenotypes.Vitals;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 
 
 public class Genotype {
@@ -17,84 +19,52 @@ public class Genotype {
     private final static float GENE_CROSSOVER_PROB = 0.70f;
     private final static float GENE_IF_CROSSOVER_DOUBLE_PROB = 0.50f;
     private final static float GENE_IF_CROSSOVER_AND_DOUBLE_UNBALANCED_PROB = 0.30f;
-    private final static String GENE_CHAR_POOL = "0123456789ABCDEF";
-    public final static int GENE_BASE = 16;
-    private final static int[] GENE_LENGTH = {100, 200};
-    private final static int[] GENE_IMPORTANT_CODE_NUMBER = {5, 10};
-    private final static int GENE_STEP = 2;
-    private final static String GENE_START = "00";
-    private final static String GENE_STOP = "FF";
+    public final static String GENE_CHAR_POOL = "0123456789ABCDEF";
+    public final static int GENE_BASE = GENE_CHAR_POOL.length();
+    private final static String GENE_SEP = "Z";
     private final HashMap<String, String> GENE_PHENOTYPES_IDS = new HashMap<String, String>();
 
     public String dna;
     private HashMap<String, ArrayList<String>> genes = new HashMap<String, ArrayList<String>>();
 
     public Genotype(String dna) {
-        this.GENE_PHENOTYPES_IDS.put("body", "01");
-        this.GENE_PHENOTYPES_IDS.put("brain", "02");
-        this.GENE_PHENOTYPES_IDS.put("vitals", "03");
-        this.GENE_PHENOTYPES_IDS.put("features", "04");
+        this.GENE_PHENOTYPES_IDS.put("body", "1");
+        this.GENE_PHENOTYPES_IDS.put("brain", "2");
+        this.GENE_PHENOTYPES_IDS.put("vitals", "3");
+        this.GENE_PHENOTYPES_IDS.put("features", "4");
 
         this.dna = dna;
         if (this.dna == null)
-            this.generateDna();
+            this.dna = this.generateDna();
         this.genes = this.extractGenes(this.dna);
     }
 
-    private void generateDna() {
-        String[] importantCodes = {GENE_START, GENE_STOP};
-        ArrayList<String> geneCodes = new ArrayList<String>(this.GENE_PHENOTYPES_IDS.values());
-        this.dna = "";
-        while (!this.isViable()) {
-            this.dna = "";
-            int length = Rand.rInt(GENE_LENGTH[0], GENE_LENGTH[1]);
-            for (int i = 0; i < length; i++)
-                this.dna = this.dna + Rand.rChoice(GENE_CHAR_POOL);
-            length = Rand.rInt(GENE_IMPORTANT_CODE_NUMBER[0], GENE_IMPORTANT_CODE_NUMBER[1]);
-            for (int i = 0; i < length; i++) {
-                int where = Rand.rInt(GENE_STEP, this.dna.length() - 2 * GENE_STEP);
-                where -= where % GENE_STEP;
-                String code = Rand.rChoice(Arrays.asList(importantCodes));
-                this.dna = this.dna.substring(0, where) + code + this.dna.substring(where + GENE_STEP);
-                if (code.equals(GENE_START))
-                    this.dna = this.dna.substring(0, where + GENE_STEP)
-                            + Rand.rChoice(geneCodes)
-                            + this.dna.substring(where + GENE_STEP * 2);
-            }
-        }
-    }
-
-    private boolean isViable() {
-        if (this.dna.isEmpty())
-            return false;
-        HashMap<String, ArrayList<String>> newGenes = this.extractGenes(this.dna);
-        if (newGenes.get(this.GENE_PHENOTYPES_IDS.get("brain"))  != null
-                && newGenes.get(this.GENE_PHENOTYPES_IDS.get("body")) != null) {
-            return true;
-        }
-        return false;
+    private String generateDna() {
+        String dna = "";
+        dna += GENE_SEP + this.GENE_PHENOTYPES_IDS.get("brain") + Brain.GeneCoder.generateRandomDNA() + GENE_SEP;
+        dna += GENE_SEP + this.GENE_PHENOTYPES_IDS.get("features") + Features.GeneCoder.generateRandomDNA() + GENE_SEP;
+        return dna;
     }
 
     private HashMap<String, ArrayList<String>> extractGenes(String dna) {
         HashMap<String, ArrayList<String>> genes = new HashMap<String, ArrayList<String>>();
-        ArrayList<String> dnaSeq = new ArrayList<String>();
-        for (int i = 0; i < dna.length(); i = i + GENE_STEP)
-            dnaSeq.add(dna.substring(i, Math.min(i + GENE_STEP, dna.length())));
+        List<String> dnaSeq = new LinkedList<String>(Arrays.asList(dna.split("")));
+        dnaSeq.remove(0);
         String gene = "";
         String geneId = "";
         boolean inGeneSequence = false;
         while (!dnaSeq.isEmpty()) {
             String code = dnaSeq.get(0);
             dnaSeq.remove(0);
-            if (code.equals(GENE_START) && !inGeneSequence) {
+            if (code.equals(GENE_SEP) && !inGeneSequence) {
                 inGeneSequence = true;
-                geneId = "code";
+                geneId = "";
                 gene = "";
-            } else if (code.equals(GENE_STOP) && inGeneSequence) {
+            } else if (code.equals(GENE_SEP) && inGeneSequence) {
                 if (!geneId.isEmpty() && !gene.isEmpty())
                     genes.get(geneId).add(gene);
                 inGeneSequence = false;
-            } else if (inGeneSequence && geneId.equals("code")) {
+            } else if (inGeneSequence && geneId.isEmpty()) {
                 geneId = code;
                 if (!genes.containsKey(geneId))
                     genes.put(geneId, new ArrayList<String>());
@@ -178,9 +148,6 @@ public class Genotype {
     public static Genotype reproduce(Genotype father, Genotype mother) {
         Genotype child = new Genotype(crossover(father.dna, mother.dna));
         child.mutate();
-        if (child.isViable())
-            return child;
-        else
-            return new Genotype(null);
+        return child;
     }
 }

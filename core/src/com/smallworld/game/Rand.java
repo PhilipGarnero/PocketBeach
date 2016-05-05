@@ -30,4 +30,26 @@ public class Rand {
     public static <T> T rChoice(List<T> from) {
         return from.get(r.nextInt(from.size()));
     }
+
+    public static String rChoices(String from, int nb) {
+        String toReturn = "";
+        for (int i = 0; i < nb; i++)
+            toReturn += from.charAt(r.nextInt(from.length()));
+        return toReturn;
+    }
+
+    public static <T> ArrayList<T> rChoices(ArrayList<T> from, int nb) {
+        ArrayList<T> toReturn = new ArrayList<T>();
+        for (int i = 0; i < nb; i++)
+            toReturn.add(from.get(r.nextInt(from.size())));
+        return toReturn;
+    }
+
+    public static <T> ArrayList<T> rChoices(List<T> from, int nb) {
+        ArrayList<T> toReturn = new ArrayList<T>();
+        for (int i = 0; i < nb; i++)
+            toReturn.add(from.get(r.nextInt(from.size())));
+        return toReturn;
+    }
+
 }

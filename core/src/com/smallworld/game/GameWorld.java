@@ -1,6 +1,7 @@
 package com.smallworld.game;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.FPSLogger;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
@@ -40,6 +41,7 @@ public class GameWorld implements ContactListener {
     private ArrayList<Food> food = new ArrayList<Food>();
     public ArrayList<Actor> actorQueue = new ArrayList<Actor>();
     public ArrayList<Actor.EggCloud> eggs = new ArrayList<Actor.EggCloud>();
+    private FPSLogger fps;
 
     public GameWorld(final int w, final int h, GameScreen screen) {
         this.width = w;
@@ -53,6 +55,7 @@ public class GameWorld implements ContactListener {
         this.screen = screen;
         this.seaShader = new SeaShader(this);
         this.actorShader = new ActorShader(this);
+        this.fps = new FPSLogger();
     }
 
     private void createWorldBoundaries() {
@@ -117,6 +120,7 @@ public class GameWorld implements ContactListener {
 
     public void update() {
         if (!this.paused) {
+            fps.log();
             long currentTime = System.nanoTime() / 1000000000;
             this.time = this.time + Gdx.graphics.getDeltaTime();
             this.updateTideLevel();

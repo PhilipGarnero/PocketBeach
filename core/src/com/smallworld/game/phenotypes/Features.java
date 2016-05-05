@@ -1,34 +1,100 @@
 package com.smallworld.game.phenotypes;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.PolygonShape;
 import com.smallworld.game.Actor;
+import com.smallworld.game.Rand;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
+import java.util.Objects;
 
 public class Features {
+    private static int TRANSDUCER_CODE_LENGTH = 2;
     public ArrayList<Sensor> sensors = new ArrayList<Sensor>();
     public ArrayList<Actuator> actuators = new ArrayList<Actuator>();
     private Actor actor;
 
     public Features(ArrayList<String> genes, Actor actor) {
         this.actor = actor;
-
-        this.actuators.add(new MoveActuator(this.actor));
-        this.actuators.add(new RotateActuator(this.actor));
-        this.actuators.add(new LayEggsActuator(this.actor));
-
-        this.sensors.add(new OrientationSensor(this.actor));
-        this.sensors.add(new RadarSensor(this.actor));
-        this.sensors.add(new TideSensor(this.actor));
-        this.sensors.add(new WaterSensor(this.actor));
-        this.sensors.add(new EnergySensor(this.actor));
-        this.sensors.add(new TemperatureSensor(this.actor));
+        for (Class<? extends Transducer> cls : GeneCoder.decode(genes)) {
+           try {
+               if (Sensor.class.isAssignableFrom(cls))
+                   this.sensors.add(((Features.Sensor)cls.getConstructor(Features.class, Actor.class).newInstance(this, this.actor)));
+               else if (Actuator.class.isAssignableFrom(cls))
+                   this.actuators.add(((Features.Actuator)cls.getConstructor(Features.class, Actor.class).newInstance(this, this.actor)));
+           } catch (Exception e) {
+               Gdx.app.log("IMPOSSIBLE ERROR", "A new instance of a Transducer subclass couldn't be created in Features' constructor.");
+               Gdx.app.log("IMPOSSIBLE ERROR", e.toString());
+           }
+        }
     }
 
-    public class Sensor {
+    public static class GeneCoder {
+        private static final Map<String, Class<? extends Transducer>> table;
+        static {
+            Map<String, Class<? extends Transducer>> tmp = new HashMap<String, Class<? extends Transducer>>();
+            tmp.put("01", MoveActuator.class);
+            tmp.put("02", RotateActuator.class);
+            tmp.put("03", LayEggsActuator.class);
+            tmp.put("81", OrientationSensor.class);
+            tmp.put("82", RadarSensor.class);
+            tmp.put("83", TideSensor.class);
+            tmp.put("84", WaterSensor.class);
+            tmp.put("85", EnergySensor.class);
+            tmp.put("86", TemperatureSensor.class);
+            table = Collections.unmodifiableMap(tmp);
+        }
+
+        public static ArrayList<Class<? extends Transducer>> decode(ArrayList<String> genes) {
+            ArrayList<Class<? extends Transducer>> transducers = new ArrayList<Class<? extends Transducer>>();
+            for (final String gene : genes) {
+                for (int i = 0; i + TRANSDUCER_CODE_LENGTH <= gene.length(); i = i + TRANSDUCER_CODE_LENGTH) {
+                    String code = gene.substring(i, i + TRANSDUCER_CODE_LENGTH);
+                    if (table.containsKey(code))
+                        transducers.add(table.get(code));
+                }
+            }
+            return transducers;
+        }
+
+        public static String encode(Features phenotype) {
+            String gene = "";
+            for (final Sensor sensor : phenotype.sensors)
+                gene += tableGetValue(sensor.getClass());
+            for (final Actuator actuator : phenotype.actuators)
+                gene += tableGetValue(actuator.getClass());
+            return gene;
+        }
+
+        public static String generateRandomDNA() {
+            String gene = "";
+            for (final Object f : Rand.rChoices(Arrays.asList(table.keySet().toArray()), Rand.rInt(3, 10))) {
+                gene += (String)f;
+            }
+            return gene;
+        }
+
+        private static String tableGetValue(Class<? extends Transducer> value) {
+            for (Map.Entry<String, Class<? extends Transducer>> entry : table.entrySet()) {
+                if (Objects.equals(value, entry.getValue())) {
+                    return entry.getKey();
+                }
+            }
+            return "";
+        }
+    }
+
+    abstract class Transducer {
+    }
+
+    public class Sensor extends Transducer {
         protected float value = 0f;
         protected Actor actor;
 
@@ -122,7 +188,7 @@ public class Features {
     }
 
 
-    public abstract class Actuator {
+    public abstract class Actuator extends Transducer {
         protected Actor actor;
 
         public Actuator(Actor actor) {
