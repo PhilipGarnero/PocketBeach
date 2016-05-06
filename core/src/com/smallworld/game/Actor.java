@@ -23,7 +23,7 @@ public class Actor {
     public Body body;
     public Vitals vitals;
     public Features features;
-    private Brain brain;
+    public Brain brain;
     private Experiment.FitnessEvaluation fitnessEvaluation;
     public MouseJoint mouseJoint = null;
     public static int EGG_SPAN = 10;
@@ -36,6 +36,7 @@ public class Actor {
             this.genotype = new Genotype(null);
         else
             this.genotype = genotype;
+        this.genotype.individual = this;
 
         this.createBody(position);
         this.buildPhenotype();
@@ -80,6 +81,8 @@ public class Actor {
     }
 
     public Color getHealthColor() {
+        if (this.isDead())
+            return new Color(0.6f, 0.6f, 0.6f, 0.8f);
         float health = this.vitals.getEnergyPercentage();
         float r = 1 - health + 1f/(float)Math.exp(Math.pow((health - 0.5f), 2) / 0.1);
         float g = health + 1f/(float)Math.exp(Math.pow((health - 0.5f), 2) / 0.1);
@@ -154,7 +157,7 @@ public class Actor {
                 bodyDef.position.set(actor.body.getPosition());
                 this.body = this.world.physics.createBody(bodyDef);
                 CircleShape circle = new CircleShape();
-                circle.setRadius(2f);
+                circle.setRadius(2.1f);
                 FixtureDef fixtureDef = new FixtureDef();
                 fixtureDef.shape = circle;
                 fixtureDef.isSensor = true;
@@ -179,12 +182,12 @@ public class Actor {
 
         private void hatch(EggCloud egg) {
             Actor a = this.world.experiment.createActor(Genotype.reproduce(egg.genotype, this.genotype));
-            a.body.setTransform(this.body.getPosition(), 0);
+            a.body.setTransform(this.body.getPosition().add(-0.1f, 0), 0);
             this.world.actorQueue.add(a);
         }
 
         public void render(SpriteBatch renderer, Texture t) {
-            renderer.draw(t, this.body.getPosition().x - 2f, this.body.getPosition().y - 2f, 4f, 4f);
+            renderer.draw(t, this.body.getPosition().x - 2.1f, this.body.getPosition().y - 2.1f, 4.2f, 4.2f);
         }
 
         public void dispose() {

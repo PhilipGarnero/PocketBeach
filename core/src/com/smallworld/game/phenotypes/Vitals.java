@@ -2,6 +2,8 @@ package com.smallworld.game.phenotypes;
 
 import com.badlogic.gdx.Gdx;
 import com.smallworld.game.Actor;
+import com.smallworld.game.Genotype;
+import com.smallworld.game.Rand;
 
 import java.util.ArrayList;
 
@@ -18,9 +20,31 @@ public class Vitals {
         this.temperature = 36f;
     }
 
+    public static class GeneCoder {
+        public static void decode(ArrayList<String> genes) {
+        }
+
+        public static String encode(Vitals phenotype) {
+            String gene = "";
+            return gene.toUpperCase();
+        }
+
+        public static String generateRandomDNA() {
+            String gene = "";
+            return gene;
+        }
+    }
+
+    public String mutateDNAFromPhenotype() {
+        String gene = GeneCoder.encode(this);
+        if (Rand.rNorm() > Genotype.GENE_MUTATION_PROB) {
+        }
+        return gene;
+    }
+
     public void update(boolean inWater) {
         float dt = Gdx.graphics.getDeltaTime();
-        this.energy -= dt * (inWater ? 0.5 : 1);
+        this.energy -= dt * (inWater ? 0.8 : 1) * 5;
         this.temperature += dt * (inWater ? -0.5 : 0.3);
         while (this.temperature < 32) {
             this.energy -= 1;

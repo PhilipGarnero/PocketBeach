@@ -158,7 +158,7 @@ public class GameWorld implements ContactListener {
             this.actorShader.draw(actor);
         this.actorShader.end();
         this.seaShader.render();
-        //this.debugRenderer.render(this.physics, this.screen.camera.combined);
+        this.debugRenderer.render(this.physics, this.screen.camera.combined);
     }
 
     @Override
@@ -181,7 +181,7 @@ public class GameWorld implements ContactListener {
         Fixture fixtureB = contact.getFixtureB();
 
         if (fixtureA.getUserData() instanceof Food || fixtureB.getUserData() instanceof Food)
-            sensorValue = -1f;
+            sensorValue = (sensorValue == 0 ? 0 : -1f);
         if (fixtureA.isSensor())
             ((Features.Sensor)fixtureA.getUserData()).setValue(sensorValue);
         else

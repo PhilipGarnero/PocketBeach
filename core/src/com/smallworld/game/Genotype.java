@@ -8,14 +8,10 @@ import com.smallworld.game.phenotypes.Vitals;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
 
 
 public class Genotype {
-    private final static float GENE_MUTATION_PROB = 0.70f;
-    private final static float GENE_IF_MUTATION_ADD_PROB = 0.1f;
-    private final static float GENE_IF_MUTATION_NO_ADD_DEL_PROB = 0.50f;
+    public final static float GENE_MUTATION_PROB = 0.40f;
     private final static float GENE_CROSSOVER_PROB = 0.70f;
     private final static float GENE_IF_CROSSOVER_DOUBLE_PROB = 0.50f;
     private final static float GENE_IF_CROSSOVER_AND_DOUBLE_UNBALANCED_PROB = 0.30f;
@@ -26,6 +22,7 @@ public class Genotype {
 
     public String dna;
     private HashMap<String, ArrayList<String>> genes = new HashMap<String, ArrayList<String>>();
+    public Actor individual = null;
 
     public Genotype(String dna) {
         this.GENE_PHENOTYPES_IDS.put("body", "1");
@@ -41,14 +38,16 @@ public class Genotype {
 
     private String generateDna() {
         String dna = "";
+//        dna += GENE_SEP + this.GENE_PHENOTYPES_IDS.get("body") + PhysicalBody.GeneCoder.generateRandomDNA() + GENE_SEP;
         dna += GENE_SEP + this.GENE_PHENOTYPES_IDS.get("brain") + Brain.GeneCoder.generateRandomDNA() + GENE_SEP;
+        dna += GENE_SEP + this.GENE_PHENOTYPES_IDS.get("vitals") + Vitals.GeneCoder.generateRandomDNA() + GENE_SEP;
         dna += GENE_SEP + this.GENE_PHENOTYPES_IDS.get("features") + Features.GeneCoder.generateRandomDNA() + GENE_SEP;
         return dna;
     }
 
     private HashMap<String, ArrayList<String>> extractGenes(String dna) {
         HashMap<String, ArrayList<String>> genes = new HashMap<String, ArrayList<String>>();
-        List<String> dnaSeq = new LinkedList<String>(Arrays.asList(dna.split("")));
+        ArrayList<String> dnaSeq = new ArrayList<String>(Arrays.asList(dna.split("")));
         dnaSeq.remove(0);
         String gene = "";
         String geneId = "";
@@ -96,18 +95,12 @@ public class Genotype {
     }
 
     private void mutate() {
-        if (Rand.rNorm() < GENE_MUTATION_PROB) {
-            int i;
-            if (Rand.rNorm() < GENE_IF_MUTATION_ADD_PROB) {
-                i = Rand.rInt(0, this.dna.length() - 1);
-                this.dna = this.dna.substring(0, i) + Rand.rChoice(GENE_CHAR_POOL) + this.dna.substring(i);
-            } else if (Rand.rNorm() < GENE_IF_MUTATION_NO_ADD_DEL_PROB) {
-                i = Rand.rInt(1, this.dna.length() - 1);
-                this.dna = this.dna.substring(0, i - 1) + this.dna.substring(i);
-            } else {
-                i = Rand.rInt(1, this.dna.length() - 1);
-                this.dna = this.dna.substring(0, i - 1) + Rand.rChoice(GENE_CHAR_POOL) + this.dna.substring(i);
-            }
+        if (this.individual != null) {
+            this.dna = "";
+//          this.dna += GENE_SEP + this.GENE_PHENOTYPES_IDS.get("body") + this.individual.body.mutateDNAFromPhenotype() + GENE_SEP;
+            this.dna += GENE_SEP + this.GENE_PHENOTYPES_IDS.get("brain") + this.individual.brain.mutateDNAFromPhenotype() + GENE_SEP;
+            this.dna += GENE_SEP + this.GENE_PHENOTYPES_IDS.get("vitals") + this.individual.vitals.mutateDNAFromPhenotype() + GENE_SEP;
+            this.dna += GENE_SEP + this.GENE_PHENOTYPES_IDS.get("features") + this.individual.features.mutateDNAFromPhenotype() + GENE_SEP;
             this.genes = this.extractGenes(this.dna);
         }
     }
@@ -116,16 +109,16 @@ public class Genotype {
         String childDna;
         int max_cut = Math.min(fatherDna.length(), motherDna.length()) - 1;
         int cut1, cut2, cut3;
-        if (Rand.rNorm() < GENE_CROSSOVER_PROB) {
+        if (Rand.rNorm() > GENE_CROSSOVER_PROB) {
             cut1 = Rand.rInt(0, max_cut);
-            if (Rand.rNorm() < GENE_IF_CROSSOVER_DOUBLE_PROB) {
+            if (Rand.rNorm() > GENE_IF_CROSSOVER_DOUBLE_PROB) {
                 cut2 = Rand.rInt(0, max_cut);
                 if (cut2 < cut1) {
                     cut1 = cut1 + cut2;
                     cut2 = cut1 - cut2;
                     cut1 = cut1 - cut2;
                 }
-                if (Rand.rNorm() < GENE_IF_CROSSOVER_AND_DOUBLE_UNBALANCED_PROB) {
+                if (Rand.rNorm() > GENE_IF_CROSSOVER_AND_DOUBLE_UNBALANCED_PROB) {
                     cut3 = Rand.rInt(0, max_cut);
                     if (cut3 < cut1) {
                         cut1 = cut1 + cut3;
@@ -146,8 +139,8 @@ public class Genotype {
     }
 
     public static Genotype reproduce(Genotype father, Genotype mother) {
-        Genotype child = new Genotype(crossover(father.dna, mother.dna));
-        child.mutate();
-        return child;
+        father.mutate();
+        mother.mutate();
+        return new Genotype(crossover(father.dna, mother.dna));
     }
 }

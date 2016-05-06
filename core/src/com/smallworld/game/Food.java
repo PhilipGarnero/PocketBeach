@@ -36,6 +36,6 @@ public class Food {
     }
 
     public int getNutritionalValue() {
-        return (this.body.getPosition().x < world.tide) ? 5 : 3;
+        return (this.body.getPosition().x < world.tide) ? 10 : 6;
     }
 }

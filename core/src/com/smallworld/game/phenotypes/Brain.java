@@ -7,6 +7,8 @@ import com.smallworld.game.Rand;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 public class Brain {
     private static int NEURON_ID_CODE_LENGTH = 2;
@@ -54,7 +56,7 @@ public class Brain {
                     outId = "0" + outId;
                 gene += outId;
             }
-            return gene;
+            return gene.toUpperCase();
         }
 
         public static String generateRandomDNA() {
@@ -64,6 +66,23 @@ public class Brain {
                 gene += Rand.rChoices(Genotype.GENE_CHAR_POOL, CONNECTION_CODE_LENGTH);
             return gene;
         }
+    }
+
+    public String mutateDNAFromPhenotype() {
+        String gene = GeneCoder.encode(this);
+        if (!gene.isEmpty() && Rand.rNorm() > Genotype.GENE_MUTATION_PROB) {
+            if (Rand.rNorm() > 0.66f) {
+                gene += Rand.rChoices(Genotype.GENE_CHAR_POOL, CONNECTION_CODE_LENGTH);
+            } else if (Rand.rNorm() > 0.33f) {
+                int pos = Rand.rInt(0, gene.length() / CONNECTION_CODE_LENGTH - 1);
+                gene = gene.substring(0, pos * CONNECTION_CODE_LENGTH) + gene.substring((pos + 1) * CONNECTION_CODE_LENGTH, gene.length());
+            } else {
+                int pos = Rand.rInt(0, gene.length() / CONNECTION_CODE_LENGTH - 1);
+                gene = gene.substring(0, pos * CONNECTION_CODE_LENGTH + NEURON_ID_CODE_LENGTH) + Rand.rChoices(Genotype.GENE_CHAR_POOL, WEIGHT_CODE_LENGTH) +
+                        gene.substring(pos * CONNECTION_CODE_LENGTH + NEURON_ID_CODE_LENGTH + WEIGHT_CODE_LENGTH, gene.length());
+            }
+        }
+        return gene;
     }
 
     private static class ConnectionBuilder {
@@ -91,7 +110,7 @@ public class Brain {
         }
     }
 
-    private Neuron treeBuilder(int neuron_id, ArrayList<Integer> inputs, ArrayList<Integer> outputs) {
+    private Neuron neuronCreator(int neuron_id, Set<Integer> inputs, Set<Integer> outputs) {
         Neuron neuron = this.getNeuron(neuron_id);
         if (neuron == null) {
             if (inputs.contains(neuron_id)) {
@@ -105,6 +124,11 @@ public class Brain {
                 this.hiddens.add(neuron);
             }
         }
+        return neuron;
+    }
+
+    private Neuron treeBuilder(int neuron_id, Set<Integer> inputs, Set<Integer> outputs) {
+        Neuron neuron = neuronCreator(neuron_id, inputs, outputs);
         if (tree.containsKey(neuron_id)) {
             ArrayList<ConnectionBuilder> work = tree.get(neuron_id);
             for (ConnectionBuilder connection : work) {
@@ -134,11 +158,10 @@ public class Brain {
             ins.add(connection.inNeuronId);
             outs.add(connection.outNeuronId);
         }
-        ArrayList<Integer> inputs = new ArrayList<Integer>(ins);
+        Set<Integer> inputs = new LinkedHashSet<Integer>(ins);
         inputs.removeAll(outs);
-        ArrayList<Integer> outputs = new ArrayList<Integer>(outs);
+        Set<Integer> outputs = new LinkedHashSet<Integer>(outs);
         outputs.removeAll(ins);
-
         for (int neuron_id : inputs)
             treeBuilder(neuron_id, inputs, outputs);
     }
@@ -299,6 +322,7 @@ public class Brain {
                 this.weight += this.weight * this.WEIGHT_ALTERATION_FACTOR;
             else
                 this.weight -= this.weight * this.WEIGHT_ALTERATION_FACTOR;
+            this.weight = Math.max(Math.min(this.weight, 1f), -1f);
         }
 
         public void reset() {

@@ -5,11 +5,11 @@ import com.badlogic.gdx.math.Vector2;
 import java.util.ArrayList;
 
 public class Experiment {
-    public final int MAX_POP_SIZE = 200;
-    public final int RANDOM_ACTORS_NUMBER = 10;
+    public final int MAX_POP_SIZE = 50;
+    public final int RANDOM_ACTORS_NUMBER = 5;
     public final float RANK_PROBABILITY_CONSTANT = 0.1f;
     public final boolean REVERSE_RANK = true;
-    public final int TIME_BETWEEN_GEN = 0;
+    public final int TIME_BETWEEN_GEN = 20;
     public int popIndex;
     public int currentGen;
     private GameWorld world;

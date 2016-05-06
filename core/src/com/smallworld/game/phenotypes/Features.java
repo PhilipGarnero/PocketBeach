@@ -5,6 +5,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.PolygonShape;
 import com.smallworld.game.Actor;
+import com.smallworld.game.Genotype;
 import com.smallworld.game.Rand;
 
 import java.util.ArrayList;
@@ -19,16 +20,18 @@ public class Features {
     private static int TRANSDUCER_CODE_LENGTH = 2;
     public ArrayList<Sensor> sensors = new ArrayList<Sensor>();
     public ArrayList<Actuator> actuators = new ArrayList<Actuator>();
+    private ArrayList<Transducer> transducers = new ArrayList<Transducer>();
     private Actor actor;
 
     public Features(ArrayList<String> genes, Actor actor) {
         this.actor = actor;
         for (Class<? extends Transducer> cls : GeneCoder.decode(genes)) {
            try {
+               this.transducers.add((cls.getConstructor(Features.class, Actor.class).newInstance(this, this.actor)));
                if (Sensor.class.isAssignableFrom(cls))
-                   this.sensors.add(((Features.Sensor)cls.getConstructor(Features.class, Actor.class).newInstance(this, this.actor)));
+                   this.sensors.add((Sensor)this.transducers.get(this.transducers.size() - 1));
                else if (Actuator.class.isAssignableFrom(cls))
-                   this.actuators.add(((Features.Actuator)cls.getConstructor(Features.class, Actor.class).newInstance(this, this.actor)));
+                   this.actuators.add((Actuator)this.transducers.get(this.transducers.size() - 1));
            } catch (Exception e) {
                Gdx.app.log("IMPOSSIBLE ERROR", "A new instance of a Transducer subclass couldn't be created in Features' constructor.");
                Gdx.app.log("IMPOSSIBLE ERROR", e.toString());
@@ -37,7 +40,7 @@ public class Features {
     }
 
     public static class GeneCoder {
-        private static final Map<String, Class<? extends Transducer>> table;
+        public static final Map<String, Class<? extends Transducer>> table;
         static {
             Map<String, Class<? extends Transducer>> tmp = new HashMap<String, Class<? extends Transducer>>();
             tmp.put("01", MoveActuator.class);
@@ -66,18 +69,15 @@ public class Features {
 
         public static String encode(Features phenotype) {
             String gene = "";
-            for (final Sensor sensor : phenotype.sensors)
-                gene += tableGetValue(sensor.getClass());
-            for (final Actuator actuator : phenotype.actuators)
-                gene += tableGetValue(actuator.getClass());
-            return gene;
+            for (final Transducer transducer : phenotype.transducers)
+                gene += tableGetValue(transducer.getClass());
+            return gene.toUpperCase();
         }
 
         public static String generateRandomDNA() {
             String gene = "";
-            for (final Object f : Rand.rChoices(Arrays.asList(table.keySet().toArray()), Rand.rInt(3, 10))) {
+            for (final Object f : Rand.rChoices(Arrays.asList(table.keySet().toArray()), Rand.rInt(3, 10)))
                 gene += (String)f;
-            }
             return gene;
         }
 
@@ -89,6 +89,18 @@ public class Features {
             }
             return "";
         }
+    }
+
+    public String mutateDNAFromPhenotype() {
+        Features clone = new Features(new ArrayList<String>(Arrays.asList(GeneCoder.encode(Features.this))), Features.this.actor);
+        String add = "";
+        if (!clone.transducers.isEmpty() && Rand.rNorm() > Genotype.GENE_MUTATION_PROB) {
+            if (Rand.rNorm() > 0.5f)
+                clone.transducers.remove(Rand.rInt(0, clone.transducers.size() - 1));
+            else
+                add = (String) Rand.rChoice(Arrays.asList(GeneCoder.table.keySet().toArray()));
+        }
+        return GeneCoder.encode(clone) + add;
     }
 
     abstract class Transducer {

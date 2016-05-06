@@ -28,7 +28,8 @@ public class Population {
         if (this.actors.size() <= this.maxPop) {
             this.actors.add(actor);
             this.sorted = false;
-        }
+        } else
+            actor.dispose();
     }
 
     public void removeDeads() {
