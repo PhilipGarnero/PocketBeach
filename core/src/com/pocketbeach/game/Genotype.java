@@ -1,9 +1,9 @@
-package com.smallworld.game;
+package com.pocketbeach.game;
 
-import com.smallworld.game.phenotypes.Brain;
-import com.smallworld.game.phenotypes.Features;
-import com.smallworld.game.phenotypes.PhysicalBody;
-import com.smallworld.game.phenotypes.Vitals;
+import com.pocketbeach.game.phenotypes.Brain;
+import com.pocketbeach.game.phenotypes.Features;
+import com.pocketbeach.game.phenotypes.PhysicalBody;
+import com.pocketbeach.game.phenotypes.Vitals;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -109,17 +109,17 @@ public class Genotype {
         String childDna;
         int max_cut = Math.min(fatherDna.length(), motherDna.length()) - 1;
         int cut1, cut2, cut3;
-        if (Rand.rNorm() > GENE_CROSSOVER_PROB) {
-            cut1 = Rand.rInt(0, max_cut);
-            if (Rand.rNorm() > GENE_IF_CROSSOVER_DOUBLE_PROB) {
-                cut2 = Rand.rInt(0, max_cut);
+        if (com.pocketbeach.game.Rand.rNorm() > GENE_CROSSOVER_PROB) {
+            cut1 = com.pocketbeach.game.Rand.rInt(0, max_cut);
+            if (com.pocketbeach.game.Rand.rNorm() > GENE_IF_CROSSOVER_DOUBLE_PROB) {
+                cut2 = com.pocketbeach.game.Rand.rInt(0, max_cut);
                 if (cut2 < cut1) {
                     cut1 = cut1 + cut2;
                     cut2 = cut1 - cut2;
                     cut1 = cut1 - cut2;
                 }
-                if (Rand.rNorm() > GENE_IF_CROSSOVER_AND_DOUBLE_UNBALANCED_PROB) {
-                    cut3 = Rand.rInt(0, max_cut);
+                if (com.pocketbeach.game.Rand.rNorm() > GENE_IF_CROSSOVER_AND_DOUBLE_UNBALANCED_PROB) {
+                    cut3 = com.pocketbeach.game.Rand.rInt(0, max_cut);
                     if (cut3 < cut1) {
                         cut1 = cut1 + cut3;
                         cut3 = cut1 - cut3;
@@ -133,7 +133,7 @@ public class Genotype {
         }
         else {
             String[] ch = {fatherDna, motherDna};
-            childDna = Rand.rChoice(Arrays.asList(ch));
+            childDna = com.pocketbeach.game.Rand.rChoice(Arrays.asList(ch));
         }
         return childDna;
     }

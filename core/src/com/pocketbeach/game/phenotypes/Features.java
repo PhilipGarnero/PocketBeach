@@ -1,12 +1,10 @@
-package com.smallworld.game.phenotypes;
+package com.pocketbeach.game.phenotypes;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.PolygonShape;
-import com.smallworld.game.Actor;
-import com.smallworld.game.Genotype;
-import com.smallworld.game.Rand;
+import com.pocketbeach.game.Rand;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -21,13 +19,13 @@ public class Features {
     public ArrayList<Sensor> sensors = new ArrayList<Sensor>();
     public ArrayList<Actuator> actuators = new ArrayList<Actuator>();
     private ArrayList<Transducer> transducers = new ArrayList<Transducer>();
-    private Actor actor;
+    private com.pocketbeach.game.Actor actor;
 
-    public Features(ArrayList<String> genes, Actor actor) {
+    public Features(ArrayList<String> genes, com.pocketbeach.game.Actor actor) {
         this.actor = actor;
         for (Class<? extends Transducer> cls : GeneCoder.decode(genes)) {
            try {
-               this.transducers.add((cls.getConstructor(Features.class, Actor.class).newInstance(this, this.actor)));
+               this.transducers.add((cls.getConstructor(Features.class, com.pocketbeach.game.Actor.class).newInstance(this, this.actor)));
                if (Sensor.class.isAssignableFrom(cls))
                    this.sensors.add((Sensor)this.transducers.get(this.transducers.size() - 1));
                else if (Actuator.class.isAssignableFrom(cls))
@@ -94,7 +92,7 @@ public class Features {
     public String mutateDNAFromPhenotype() {
         Features clone = new Features(new ArrayList<String>(Arrays.asList(GeneCoder.encode(Features.this))), Features.this.actor);
         String add = "";
-        if (!clone.transducers.isEmpty() && Rand.rNorm() > Genotype.GENE_MUTATION_PROB) {
+        if (!clone.transducers.isEmpty() && Rand.rNorm() > com.pocketbeach.game.Genotype.GENE_MUTATION_PROB) {
             if (Rand.rNorm() > 0.5f)
                 clone.transducers.remove(Rand.rInt(0, clone.transducers.size() - 1));
             else
@@ -108,9 +106,9 @@ public class Features {
 
     public class Sensor extends Transducer {
         protected float value = 0f;
-        protected Actor actor;
+        protected com.pocketbeach.game.Actor actor;
 
-        public Sensor(Actor actor) {
+        public Sensor(com.pocketbeach.game.Actor actor) {
             this.actor = actor;
         }
 
@@ -124,7 +122,7 @@ public class Features {
     }
 
     public class TideSensor extends Sensor {
-        public TideSensor(Actor actor) {
+        public TideSensor(com.pocketbeach.game.Actor actor) {
             super(actor);
         }
 
@@ -135,7 +133,7 @@ public class Features {
     }
 
     public class WaterSensor extends Sensor {
-        public WaterSensor(Actor actor) {
+        public WaterSensor(com.pocketbeach.game.Actor actor) {
             super(actor);
         }
 
@@ -146,7 +144,7 @@ public class Features {
     }
 
     public class TemperatureSensor extends Sensor {
-        public TemperatureSensor(Actor actor) {
+        public TemperatureSensor(com.pocketbeach.game.Actor actor) {
             super(actor);
         }
 
@@ -157,7 +155,7 @@ public class Features {
     }
 
     public class EnergySensor extends Sensor {
-        public EnergySensor(Actor actor) {
+        public EnergySensor(com.pocketbeach.game.Actor actor) {
             super(actor);
         }
 
@@ -168,7 +166,7 @@ public class Features {
     }
 
     public class OrientationSensor extends Sensor {
-        public OrientationSensor(Actor actor) {
+        public OrientationSensor(com.pocketbeach.game.Actor actor) {
             super(actor);
         }
 
@@ -179,7 +177,7 @@ public class Features {
     }
 
     public class RadarSensor extends Sensor {
-        public RadarSensor(Actor actor) {
+        public RadarSensor(com.pocketbeach.game.Actor actor) {
             super(actor);
 
             float radius = 3;
@@ -201,9 +199,9 @@ public class Features {
 
 
     public abstract class Actuator extends Transducer {
-        protected Actor actor;
+        protected com.pocketbeach.game.Actor actor;
 
-        public Actuator(Actor actor) {
+        public Actuator(com.pocketbeach.game.Actor actor) {
             this.actor = actor;
         }
 
@@ -221,7 +219,7 @@ public class Features {
     }
 
     public class MoveActuator extends Actuator {
-        public MoveActuator(Actor actor) {
+        public MoveActuator(com.pocketbeach.game.Actor actor) {
             super(actor);
         }
 
@@ -238,7 +236,7 @@ public class Features {
     }
 
     public class RotateActuator extends Actuator {
-        public RotateActuator(Actor actor) {
+        public RotateActuator(com.pocketbeach.game.Actor actor) {
             super(actor);
         }
 
@@ -252,7 +250,7 @@ public class Features {
     public class LayEggsActuator extends Actuator {
         private long lastLay;
 
-        public LayEggsActuator(Actor actor) {
+        public LayEggsActuator(com.pocketbeach.game.Actor actor) {
             super(actor);
             this.lastLay = System.nanoTime() / 1000000000;
         }
@@ -261,7 +259,7 @@ public class Features {
         public void act(Iterator<Float> it) {
             float[] outputs = this.getOutputs(it, 1);
             long currentTime = System.nanoTime() / 1000000000;
-            if (outputs[0] > 0f && currentTime - this.lastLay > Actor.EGG_SPAN) {
+            if (outputs[0] > 0f && currentTime - this.lastLay > com.pocketbeach.game.Actor.EGG_SPAN) {
                 this.lastLay = currentTime;
                 this.actor.layEggs();
             }

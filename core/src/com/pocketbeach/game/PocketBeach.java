@@ -1,11 +1,11 @@
-package com.smallworld.game;
+package com.pocketbeach.game;
 
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.smallworld.game.screens.MainMenuScreen;
+import com.pocketbeach.game.screens.MainMenuScreen;
 
-public class SmallWorld extends Game {
+public class PocketBeach extends Game {
 	public SpriteBatch batch;
 	public BitmapFont font;
 

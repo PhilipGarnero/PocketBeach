@@ -1,4 +1,4 @@
-package com.smallworld.game;
+package com.pocketbeach.game;
 
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.graphics.OrthographicCamera;
@@ -10,11 +10,10 @@ import com.badlogic.gdx.physics.box2d.Fixture;
 import com.badlogic.gdx.physics.box2d.QueryCallback;
 import com.badlogic.gdx.physics.box2d.joints.MouseJoint;
 import com.badlogic.gdx.physics.box2d.joints.MouseJointDef;
-import com.smallworld.game.screens.GameScreen;
 
 public class GameInputs implements GestureDetector.GestureListener, InputProcessor {
     private OrthographicCamera cam;
-    private GameScreen screen;
+    private com.pocketbeach.game.screens.GameScreen screen;
     private GameWorld gameWorld;
     private Vector3 dragMem = new Vector3();
     private Vector3 originalCam = new Vector3();
@@ -26,7 +25,7 @@ public class GameInputs implements GestureDetector.GestureListener, InputProcess
     private Vector3 tmpv3 = new Vector3();
     private int finger = 0;
 
-    public GameInputs(GameScreen screen) {
+    public GameInputs(com.pocketbeach.game.screens.GameScreen screen) {
         this.cam = screen.camera;
         this.gameWorld = screen.gameWorld;
         this.screen = screen;

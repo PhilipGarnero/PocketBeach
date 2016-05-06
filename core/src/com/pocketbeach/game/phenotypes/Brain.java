@@ -1,8 +1,4 @@
-package com.smallworld.game.phenotypes;
-
-import com.smallworld.game.Actor;
-import com.smallworld.game.Genotype;
-import com.smallworld.game.Rand;
+package com.pocketbeach.game.phenotypes;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -14,16 +10,16 @@ public class Brain {
     private static int NEURON_ID_CODE_LENGTH = 2;
     private static int WEIGHT_CODE_LENGTH = 3;
     private static int CONNECTION_CODE_LENGTH = NEURON_ID_CODE_LENGTH * 2 + WEIGHT_CODE_LENGTH;
-    private static float BASE_10_MAX = (float)Math.pow(Genotype.GENE_BASE, WEIGHT_CODE_LENGTH) / 2f;
+    private static float BASE_10_MAX = (float)Math.pow(com.pocketbeach.game.Genotype.GENE_BASE, WEIGHT_CODE_LENGTH) / 2f;
 
     private ArrayList<InputNeuron> inputs = new ArrayList<InputNeuron>();
     private ArrayList<Neuron> hiddens = new ArrayList<Neuron>();
     private ArrayList<OutputNeuron> outputs = new ArrayList<OutputNeuron>();
     private ArrayList<Synapse> connections = new ArrayList<Synapse>();
     private HashMap<Integer, ArrayList<ConnectionBuilder>> tree = new HashMap<Integer, ArrayList<ConnectionBuilder>>();
-    private Actor actor;
+    private com.pocketbeach.game.Actor actor;
 
-    public Brain(ArrayList<String> genes, Actor actor) {
+    public Brain(ArrayList<String> genes, com.pocketbeach.game.Actor actor) {
         this.actor = actor;
         this.netBuilder(GeneCoder.decode(genes));
     }
@@ -61,24 +57,24 @@ public class Brain {
 
         public static String generateRandomDNA() {
             String gene = "";
-            int nb = Rand.rInt(1, 30);
+            int nb = com.pocketbeach.game.Rand.rInt(1, 30);
             for (int i = 0; i < nb; i++)
-                gene += Rand.rChoices(Genotype.GENE_CHAR_POOL, CONNECTION_CODE_LENGTH);
+                gene += com.pocketbeach.game.Rand.rChoices(com.pocketbeach.game.Genotype.GENE_CHAR_POOL, CONNECTION_CODE_LENGTH);
             return gene;
         }
     }
 
     public String mutateDNAFromPhenotype() {
         String gene = GeneCoder.encode(this);
-        if (!gene.isEmpty() && Rand.rNorm() > Genotype.GENE_MUTATION_PROB) {
-            if (Rand.rNorm() > 0.66f) {
-                gene += Rand.rChoices(Genotype.GENE_CHAR_POOL, CONNECTION_CODE_LENGTH);
-            } else if (Rand.rNorm() > 0.33f) {
-                int pos = Rand.rInt(0, gene.length() / CONNECTION_CODE_LENGTH - 1);
+        if (!gene.isEmpty() && com.pocketbeach.game.Rand.rNorm() > com.pocketbeach.game.Genotype.GENE_MUTATION_PROB) {
+            if (com.pocketbeach.game.Rand.rNorm() > 0.66f) {
+                gene += com.pocketbeach.game.Rand.rChoices(com.pocketbeach.game.Genotype.GENE_CHAR_POOL, CONNECTION_CODE_LENGTH);
+            } else if (com.pocketbeach.game.Rand.rNorm() > 0.33f) {
+                int pos = com.pocketbeach.game.Rand.rInt(0, gene.length() / CONNECTION_CODE_LENGTH - 1);
                 gene = gene.substring(0, pos * CONNECTION_CODE_LENGTH) + gene.substring((pos + 1) * CONNECTION_CODE_LENGTH, gene.length());
             } else {
-                int pos = Rand.rInt(0, gene.length() / CONNECTION_CODE_LENGTH - 1);
-                gene = gene.substring(0, pos * CONNECTION_CODE_LENGTH + NEURON_ID_CODE_LENGTH) + Rand.rChoices(Genotype.GENE_CHAR_POOL, WEIGHT_CODE_LENGTH) +
+                int pos = com.pocketbeach.game.Rand.rInt(0, gene.length() / CONNECTION_CODE_LENGTH - 1);
+                gene = gene.substring(0, pos * CONNECTION_CODE_LENGTH + NEURON_ID_CODE_LENGTH) + com.pocketbeach.game.Rand.rChoices(com.pocketbeach.game.Genotype.GENE_CHAR_POOL, WEIGHT_CODE_LENGTH) +
                         gene.substring(pos * CONNECTION_CODE_LENGTH + NEURON_ID_CODE_LENGTH + WEIGHT_CODE_LENGTH, gene.length());
             }
         }
@@ -91,10 +87,10 @@ public class Brain {
         private int outNeuronId;
 
         public ConnectionBuilder(String code) {
-            this.inNeuronId = Integer.parseInt(code.substring(0, NEURON_ID_CODE_LENGTH), Genotype.GENE_BASE);
+            this.inNeuronId = Integer.parseInt(code.substring(0, NEURON_ID_CODE_LENGTH), com.pocketbeach.game.Genotype.GENE_BASE);
             this.weight = (Integer.parseInt(code.substring(NEURON_ID_CODE_LENGTH,
-                    NEURON_ID_CODE_LENGTH + WEIGHT_CODE_LENGTH), Genotype.GENE_BASE) - BASE_10_MAX) / BASE_10_MAX;
-            this.outNeuronId = Integer.parseInt(code.substring(NEURON_ID_CODE_LENGTH + WEIGHT_CODE_LENGTH), Genotype.GENE_BASE);
+                    NEURON_ID_CODE_LENGTH + WEIGHT_CODE_LENGTH), com.pocketbeach.game.Genotype.GENE_BASE) - BASE_10_MAX) / BASE_10_MAX;
+            this.outNeuronId = Integer.parseInt(code.substring(NEURON_ID_CODE_LENGTH + WEIGHT_CODE_LENGTH), com.pocketbeach.game.Genotype.GENE_BASE);
         }
     }
 

@@ -1,4 +1,4 @@
-package com.smallworld.game;
+package com.pocketbeach.game;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
@@ -9,26 +9,26 @@ import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.CircleShape;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.joints.MouseJoint;
-import com.smallworld.game.phenotypes.Brain;
-import com.smallworld.game.phenotypes.Features;
-import com.smallworld.game.phenotypes.Vitals;
+import com.pocketbeach.game.phenotypes.Brain;
+import com.pocketbeach.game.phenotypes.Features;
+import com.pocketbeach.game.phenotypes.Vitals;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 
 public class Actor {
     public int id;
-    public GameWorld world;
+    public com.pocketbeach.game.GameWorld world;
     public Genotype genotype;
     public Body body;
     public Vitals vitals;
     public Features features;
     public Brain brain;
-    private Experiment.FitnessEvaluation fitnessEvaluation;
+    private com.pocketbeach.game.Experiment.FitnessEvaluation fitnessEvaluation;
     public MouseJoint mouseJoint = null;
     public static int EGG_SPAN = 10;
 
-    public Actor(GameWorld world, int id, Experiment.FitnessEvaluation fitnessEvaluation, Genotype genotype, Vector2 position) {
+    public Actor(com.pocketbeach.game.GameWorld world, int id, com.pocketbeach.game.Experiment.FitnessEvaluation fitnessEvaluation, Genotype genotype, Vector2 position) {
         this.world = world;
         this.id = id;
         this.fitnessEvaluation = fitnessEvaluation;
@@ -144,7 +144,7 @@ public class Actor {
         public long layedTime;
         public boolean inseminated = false;
         public Genotype genotype;
-        private GameWorld world;
+        private com.pocketbeach.game.GameWorld world;
 
         public EggCloud(Actor actor) {
             this.world = actor.world;

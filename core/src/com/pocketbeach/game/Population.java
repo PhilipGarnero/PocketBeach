@@ -1,4 +1,4 @@
-package com.smallworld.game;
+package com.pocketbeach.game;
 
 import java.util.ArrayList;
 import java.util.Collections;

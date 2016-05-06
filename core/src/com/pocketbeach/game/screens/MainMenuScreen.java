@@ -1,33 +1,40 @@
-package com.smallworld.game.screens;
+package com.pocketbeach.game.screens;
 
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
-import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.smallworld.game.SmallWorld;
+import com.badlogic.gdx.graphics.Texture;
+import com.pocketbeach.game.PocketBeach;
+
+import java.util.HashMap;
 
 public class MainMenuScreen implements Screen {
 
-    private final SmallWorld game;
+    private final com.pocketbeach.game.PocketBeach game;
     private OrthographicCamera camera;
+    private HashMap<String, Texture> textures = new HashMap<String, Texture>();
 
-    public MainMenuScreen(final SmallWorld game) {
+    public MainMenuScreen(final PocketBeach game) {
         this.game = game;
         this.camera = new OrthographicCamera();
-        this.camera.setToOrtho(false, 800, 480);
+        this.camera.setToOrtho(false, 1280, 800);
+        this.loadTextures();
+    }
+
+    private void loadTextures() {
+        this.textures.put("background", new Texture(Gdx.files.internal("homebackground.png")));
     }
 
     @Override
     public void render(float delta) {
-        Gdx.gl.glClearColor(0, 0, 0.2f, 1);
-        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
         this.camera.update();
         this.game.batch.setProjectionMatrix(camera.combined);
 
         this.game.batch.begin();
-        this.game.font.draw(this.game.batch, "Welcome to SmallWorld !", 100, 150);
+        this.game.batch.draw(this.textures.get("background"), 1, 1);
+        this.game.font.draw(this.game.batch, "Welcome to PocketBeach !", 100, 150);
         this.game.font.draw(this.game.batch, "Tap anywhere to begin !", 100, 100);
         this.game.batch.end();
 

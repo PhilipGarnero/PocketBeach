@@ -1,4 +1,4 @@
-package com.smallworld.game;
+package com.pocketbeach.game;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.FPSLogger;
@@ -16,15 +16,14 @@ import com.badlogic.gdx.physics.box2d.ContactListener;
 import com.badlogic.gdx.physics.box2d.Fixture;
 import com.badlogic.gdx.physics.box2d.Manifold;
 import com.badlogic.gdx.physics.box2d.World;
-import com.smallworld.game.phenotypes.Features;
-import com.smallworld.game.screens.GameScreen;
+import com.pocketbeach.game.phenotypes.Features;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 
 
 public class GameWorld implements ContactListener {
-    public GameScreen screen;
+    public com.pocketbeach.game.screens.GameScreen screen;
     public World physics;
     public final float width;
     private final float TIDE_ORIGINAL_POS = 0.6f;
@@ -37,13 +36,13 @@ public class GameWorld implements ContactListener {
     private Box2DDebugRenderer debugRenderer = new Box2DDebugRenderer();
     public ShapeRenderer shapeRenderer = new ShapeRenderer();
     private SeaShader seaShader;
-    private ActorShader actorShader;
+    private com.pocketbeach.game.ActorShader actorShader;
     private ArrayList<Food> food = new ArrayList<Food>();
     public ArrayList<Actor> actorQueue = new ArrayList<Actor>();
     public ArrayList<Actor.EggCloud> eggs = new ArrayList<Actor.EggCloud>();
     private FPSLogger fps;
 
-    public GameWorld(final int w, final int h, GameScreen screen) {
+    public GameWorld(final int w, final int h, com.pocketbeach.game.screens.GameScreen screen) {
         this.width = w;
         this.height = h;
         this.tide = this.TIDE_ORIGINAL_POS * w;
@@ -54,7 +53,7 @@ public class GameWorld implements ContactListener {
         this.experiment.start();
         this.screen = screen;
         this.seaShader = new SeaShader(this);
-        this.actorShader = new ActorShader(this);
+        this.actorShader = new com.pocketbeach.game.ActorShader(this);
         this.fps = new FPSLogger();
     }
 
@@ -102,7 +101,7 @@ public class GameWorld implements ContactListener {
         }
         int i = 0;
         if (this.time % 10 != 0)
-            i = Rand.rInt(0, 10);
+            i = com.pocketbeach.game.Rand.rInt(0, 10);
         while (i-- > 0 && this.food.size() < 50)
             this.food.add(new Food(this));
     }

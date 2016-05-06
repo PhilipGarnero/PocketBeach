@@ -1,15 +1,13 @@
-package com.smallworld.game.phenotypes;
+package com.pocketbeach.game.phenotypes;
 
-import com.smallworld.game.Actor;
-import com.smallworld.game.Genotype;
-import com.smallworld.game.Rand;
+import com.pocketbeach.game.Rand;
 
 import java.util.ArrayList;
 
 public class PhysicalBody {
-    private Actor actor;
+    private com.pocketbeach.game.Actor actor;
 
-    public PhysicalBody(ArrayList<String> genes, Actor actor) {
+    public PhysicalBody(ArrayList<String> genes, com.pocketbeach.game.Actor actor) {
         this.actor = actor;
     }
 
@@ -30,7 +28,7 @@ public class PhysicalBody {
 
     public String mutateDNAFromPhenotype() {
         String gene = GeneCoder.encode(this);
-        if (Rand.rNorm() > Genotype.GENE_MUTATION_PROB) {
+        if (Rand.rNorm() > com.pocketbeach.game.Genotype.GENE_MUTATION_PROB) {
         }
         return gene;
     }

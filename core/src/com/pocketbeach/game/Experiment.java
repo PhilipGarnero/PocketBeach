@@ -1,4 +1,4 @@
-package com.smallworld.game;
+package com.pocketbeach.game;
 
 import com.badlogic.gdx.math.Vector2;
 

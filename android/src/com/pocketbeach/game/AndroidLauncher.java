@@ -1,4 +1,4 @@
-package com.smallworld.game;
+package com.pocketbeach.game;
 
 import android.os.Bundle;
 
@@ -13,6 +13,6 @@ public class AndroidLauncher extends AndroidApplication {
         config.useAccelerometer = false;
         config.useCompass = false;
         config.useWakelock = true;
-		initialize(new SmallWorld(), config);
+		initialize(new PocketBeach(), config);
 	}
 }

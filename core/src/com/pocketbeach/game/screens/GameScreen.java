@@ -1,4 +1,4 @@
-package com.smallworld.game.screens;
+package com.pocketbeach.game.screens;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputMultiplexer;
@@ -8,14 +8,14 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.input.GestureDetector;
 import com.badlogic.gdx.math.MathUtils;
-import com.smallworld.game.GameInputs;
-import com.smallworld.game.GameWorld;
-import com.smallworld.game.SmallWorld;
+import com.pocketbeach.game.GameInputs;
+import com.pocketbeach.game.GameWorld;
+import com.pocketbeach.game.PocketBeach;
 
 import java.util.HashMap;
 
 public class GameScreen implements Screen {
-    final SmallWorld game;
+    final PocketBeach game;
     public final static float CAMERA_VIEWPOINT = 100f;
     public final static int WORLD_WIDTH = 60;
     public final static int WORLD_HEIGHT = 33;
@@ -24,7 +24,7 @@ public class GameScreen implements Screen {
     public HashMap<String, Texture> textures = new HashMap<String, Texture>();
     public GameInputs inputs;
 
-    public GameScreen(final SmallWorld game) {
+    public GameScreen(final PocketBeach game) {
         this.game = game;
         this.loadTextures();
         this.setCamera();

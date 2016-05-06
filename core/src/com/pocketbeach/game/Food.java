@@ -1,4 +1,4 @@
-package com.smallworld.game;
+package com.pocketbeach.game;
 
 
 import com.badlogic.gdx.graphics.Texture;
@@ -16,8 +16,8 @@ public class Food {
 
     public Food(GameWorld world) {
         this.world = world;
-        Vector2 pos = new Vector2(Rand.rInt(1, (int)world.width - 1),
-                                  Rand.rInt(1, (int)world.height - 1));
+        Vector2 pos = new Vector2(com.pocketbeach.game.Rand.rInt(1, (int) world.width - 1),
+                                  com.pocketbeach.game.Rand.rInt(1, (int) world.height - 1));
         BodyDef bodyDef = new BodyDef();
         bodyDef.type = BodyDef.BodyType.StaticBody;
         bodyDef.position.set(pos);
