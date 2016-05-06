@@ -34,8 +34,7 @@ public class MainMenuScreen implements Screen {
 
         this.game.batch.begin();
         this.game.batch.draw(this.textures.get("background"), 1, 1);
-        this.game.font.draw(this.game.batch, "Welcome to PocketBeach !", 100, 150);
-        this.game.font.draw(this.game.batch, "Tap anywhere to begin !", 100, 100);
+        this.game.font.draw(this.game.batch, "Tap anywhere to begin !", 450, 100);
         this.game.batch.end();
 
         if (Gdx.input.isTouched()) {

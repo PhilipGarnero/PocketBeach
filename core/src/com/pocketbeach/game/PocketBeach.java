@@ -12,6 +12,7 @@ public class PocketBeach extends Game {
 	public void create() {
 		this.batch = new SpriteBatch();
 		this.font = new BitmapFont();
+		this.font.getData().setScale(3, 3);
 		this.setScreen(new MainMenuScreen(this));
 	}
 

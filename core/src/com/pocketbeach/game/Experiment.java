@@ -9,7 +9,7 @@ public class Experiment {
     public final int RANDOM_ACTORS_NUMBER = 5;
     public final float RANK_PROBABILITY_CONSTANT = 0.1f;
     public final boolean REVERSE_RANK = true;
-    public final int TIME_BETWEEN_GEN = 20;
+    public final int TIME_BETWEEN_GEN = 0;
     public int popIndex;
     public int currentGen;
     private GameWorld world;

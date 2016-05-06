@@ -41,7 +41,7 @@ public class Vitals {
 
     public void update(boolean inWater) {
         float dt = Gdx.graphics.getDeltaTime();
-        this.energy -= dt * (inWater ? 0.8 : 1) * 5;
+        this.energy -= dt * (inWater ? 0.8 : 1);
         this.temperature += dt * (inWater ? -0.5 : 0.3);
         while (this.temperature < 32) {
             this.energy -= 1;

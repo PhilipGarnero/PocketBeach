@@ -157,7 +157,7 @@ public class GameWorld implements ContactListener {
             this.actorShader.draw(actor);
         this.actorShader.end();
         this.seaShader.render();
-        this.debugRenderer.render(this.physics, this.screen.camera.combined);
+        //this.debugRenderer.render(this.physics, this.screen.camera.combined);
     }
 
     @Override
